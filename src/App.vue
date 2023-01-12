@@ -1,8 +1,13 @@
 <template>
   <div id="app">
+
     <yn-spin :spinning="spinning" size="large">
       <yn-locale-provider :locale="getLocale()">
-        <!-- <MainFrame /> -->
+        <preciseRelease />
+      </yn-locale-provider> 
+    </yn-spin>
+ 
+            <!-- <MainFrame /> -->
         <!-- 默认页面 -->
         <!-- <mydemo /> -->
         <!-- handsontable功能演示 -->
@@ -22,10 +27,6 @@
         <!-- 防抖test -->
         <!-- <router-view></router-view> -->
         <!-- 路由页面 -->
-        <preciseRelease />
-
-      </yn-locale-provider>
-    </yn-spin>
   </div>
 </template>
 
@@ -274,6 +275,7 @@ export default {
 }
 #app > .ant-spin-nested-loading > .ant-spin-container {
   position: static; /* fix the tree context menu position is not right issue. */
+  height: 100% !important;
 }
 
 #app > .ant-spin-nested-loading > div > .ant-spin-spinning {

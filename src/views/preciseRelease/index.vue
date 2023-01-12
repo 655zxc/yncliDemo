@@ -62,8 +62,10 @@
         ></yn-checkbox>
         <yn-page-list
           :tableConfig="tableConfig"
-          rowKey="name"
+          rowKey="bookId"
           @table_change="onTableChange"
+          :dataPanelSkeleton="dataPanelSkeleton"
+          :autoHeight="true"
         >
           <template slot="table.firstCol" slot-scope="text, record">
             <yn-checkbox
@@ -203,10 +205,19 @@
         </yn-page-list>
       </div>
       <yn-modal title="选择表单" v-model="visible" @ok="handleOk">
-        <yn-list itemLayout="horizontal" :dataSource="searchFormData" rowKey="bookId" @rowSelectChange="onRowSelect" :rowSelection="true">
+        <yn-list
+          itemLayout="horizontal"
+          :dataSource="searchFormData"
+          rowKey="bookId"
+          @rowSelectChange="onRowSelect"
+          :rowSelection="true"
+          ref="list"
+        >
+          <div slot="header">
+            <yn-checkbox @change="setSelectAll">全选</yn-checkbox>
+          </div>
           <yn-list-item slot="renderItem" slot-scope="item, index">
-            <yn-list-item-meta
-            >
+            <yn-list-item-meta>
               <span slot="title">{{ item.bookName }}</span>
             </yn-list-item-meta>
           </yn-list-item>
@@ -222,7 +233,7 @@ import "yn-p1/libs/components/yn-list-item/";
 import "yn-p1/libs/components/yn-list-item-meta/";
 import DsUtils from "yn-p1/libs/utils/DsUtils";
 import UiUtils from "yn-p1/libs/utils/UiUtils";
-import api from "./js/api"
+import api from "./js/api";
 export default {
   name: "preciseRelease",
   data() {
@@ -246,7 +257,10 @@ export default {
       selectedForm: [],
       visible: false,
       searchFormData: [],
-      
+      selectAll: false,
+      dataPanelSkeleton: {
+        loading: false
+      }
     };
   },
   computed: {
@@ -283,15 +297,18 @@ export default {
     onChangeFormula() {},
     search() {
       //注意发送selectedForm不是formName
+      console.log(
+        this.selectedForm,
+        this.filterDimension,
+        this.structureCheckbox,
+        this.formulaCheckbox
+      );
 
-
-
-      
       let columns = [
         {
           title: "",
-          dataIndex: "key", //这一列的数据来源与data中的key
-          width: 100,
+          dataIndex: "bookId", //这一列的数据来源与data中的key
+          width: "10%",
           align: "center",
           scopedSlots: {
             customRender: "firstCol" //这一列提供插槽,名为table.key
@@ -299,18 +316,18 @@ export default {
         },
         {
           title: "表单名称",
-          dataIndex: "name",
-          width: 200
+          dataIndex: "bookName",
+          width: "30%"
         },
         {
           title: "筛选维",
           dataIndex: "dimension",
-          width: 200
+          width: "30%"
         },
         {
           title: "结构失效",
           dataIndex: "structureSign",
-          width: 100,
+          width: "10%",
           align: "center",
           scopedSlots: {
             customRender: "structureSign"
@@ -319,7 +336,7 @@ export default {
         {
           title: "公式失效",
           dataIndex: "formulaSign",
-          width: 100,
+          width: "10%",
           align: "center",
           scopedSlots: {
             customRender: "formulaSign"
@@ -328,7 +345,7 @@ export default {
         {
           title: "删除标识",
           dataIndex: "deleteSign",
-          width: 100,
+          width: "10%",
           align: "center",
           scopedSlots: {
             customRender: "deleteSign"
@@ -337,9 +354,10 @@ export default {
       ];
       let data = [
         {
-          //key用于checkbox列,这样选择时才知道选了哪个
+          //key用于pagelist组件,使用bookId的值
           key: "key1",
-          name: "表单1",
+          bookId: "key1",
+          bookName: "表单1",
           dimension: "筛选维A",
           structureSign: "true",
           formulaSign: "false",
@@ -347,7 +365,8 @@ export default {
         },
         {
           key: "key2",
-          name: "表单2",
+          bookId: "key2",
+          bookName: "表单2",
           dimension: "筛选维A",
           structureSign: "true",
           formulaSign: "false",
@@ -355,7 +374,8 @@ export default {
         },
         {
           key: "key3",
-          name: "表单3",
+          bookId: "key3",
+          bookName: "表单3",
           dimension: "筛选维A",
           structureSign: "true",
           formulaSign: "false",
@@ -363,7 +383,8 @@ export default {
         },
         {
           key: "key4",
-          name: "表单4",
+          bookId: "key4",
+          bookName: "表单4",
           dimension: "筛选维B",
           structureSign: "true",
           formulaSign: "false",
@@ -371,7 +392,8 @@ export default {
         },
         {
           key: "key5",
-          name: "表单5",
+          bookId: "key5",
+          bookName: "表单5",
           dimension: "筛选维B",
           structureSign: "true",
           formulaSign: "false",
@@ -379,7 +401,8 @@ export default {
         },
         {
           key: "key6",
-          name: "表单6",
+          bookId: "key6",
+          bookName: "表单6",
           dimension: "筛选维C",
           structureSign: "true",
           formulaSign: "false",
@@ -387,7 +410,8 @@ export default {
         },
         {
           key: "key7",
-          name: "表单7",
+          bookId: "key7",
+          bookName: "表单7",
           dimension: "筛选维C",
           structureSign: "true",
           formulaSign: "false",
@@ -395,7 +419,8 @@ export default {
         },
         {
           key: "key8",
-          name: "表单8",
+          bookId: "key8",
+          bookName: "表单8",
           dimension: "筛选维C",
           structureSign: "true",
           formulaSign: "false",
@@ -403,7 +428,8 @@ export default {
         },
         {
           key: "key9",
-          name: "表单9",
+          bookId: "key9",
+          bookName: "表单9",
           dimension: "筛选维C",
           structureSign: "true",
           formulaSign: "false",
@@ -411,7 +437,8 @@ export default {
         },
         {
           key: "key10",
-          name: "表单10",
+          bookId: "key10",
+          bookName: "表单10",
           dimension: "筛选维D",
           structureSign: "true",
           formulaSign: "false",
@@ -419,7 +446,8 @@ export default {
         },
         {
           key: "key11",
-          name: "表单11",
+          bookId: "key11",
+          bookName: "表单11",
           dimension: "筛选维D",
           structureSign: "true",
           formulaSign: "false",
@@ -427,7 +455,8 @@ export default {
         },
         {
           key: "key12",
-          name: "表单12",
+          bookId: "key12",
+          bookName: "表单12",
           dimension: "筛选维E",
           structureSign: "true",
           formulaSign: "false",
@@ -442,6 +471,9 @@ export default {
         pageSizeOptions: ["5", "10", "20", "30", "40", "50"],
         showSizeChanger: true
       };
+
+      this.dataPanelSkeleton.loading = true;
+
       setTimeout(() => {
         this.tableConfig.columns = columns;
         this.tableConfig.dataSource = data;
@@ -449,6 +481,8 @@ export default {
         this.$nextTick(() => {
           this.init();
         });
+
+        this.dataPanelSkeleton.loading = false;
       }, 1000);
     },
     buildCache() {},
@@ -459,7 +493,7 @@ export default {
     structuralFailure() {
       //对被选中的数据的 structureSign 置反
       this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.key]) {
+        if (this.isChecked[p.bookId]) {
           if (p.structureSign == "true") {
             this.$set(
               this.tableConfig.dataSource[index],
@@ -478,7 +512,7 @@ export default {
     },
     formulaFailure() {
       this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.key]) {
+        if (this.isChecked[p.bookId]) {
           if (p.formulaSign == "true") {
             this.$set(
               this.tableConfig.dataSource[index],
@@ -497,7 +531,7 @@ export default {
     },
     deleteOperation() {
       this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.key]) {
+        if (this.isChecked[p.bookId]) {
           if (p.deleteSign == "true") {
             this.$set(
               this.tableConfig.dataSource[index],
@@ -523,8 +557,10 @@ export default {
     },
     //创建数据控制checkbox
     createIsChecked() {
+      //清空
+      this.isChecked = {};
       this.tableConfig.dataSource.forEach(p => {
-        this.$set(this.isChecked, `${p.key}`, false);
+        this.$set(this.isChecked, `${p.bookId}`, false);
       });
     },
     //创建标题的checkbox
@@ -566,56 +602,68 @@ export default {
     },
     //搜索表单
     onSearchForm() {
-      DsUtils.get(
-          `${api.getSearchForm}?formName=${this.formName}`
-      ).then(res => {
-        if (res.data.success) {
-          this.searchFormData = res.data.data
-          if (res.data.data.length == 0) {
-            UiUtils.infoMessage("无对应表单")
-            //无数据 不打开modal
+      DsUtils.get(`${api.getSearchForm}?formName=${this.formName}`)
+        .then(res => {
+          if (res.data.success) {
+            this.searchFormData = res.data.data;
+            if (res.data.data.length == 0) {
+              UiUtils.infoMessage("无对应表单");
+              //无数据 不打开modal
+            } else {
+              this.visible = true;
+            }
+          } else {
+            UiUtils.errorMessage(res.data.message);
           }
-          else {
-            this.visible = true;
-          }
-        }
-        else {
-          UiUtils.errorMessage(res.data.message);
-        }
-      }).catch(err => {
-        UiUtils.errorMessage("请求错误");
-        console.log(err);
-      })
+        })
+        .catch(err => {
+          UiUtils.errorMessage("请求错误");
+          console.log(err);
+        });
     },
     //取消tags
-    cancelSelection(name) {
+    cancelSelection(p) {
       this.$nextTick(() => {
-        this.selectedForm.splice(this.selectedForm.indexOf(name), 1);
+        let formIndex = null;
+        this.selectedForm.forEach((q, index) => {
+          if (p.bookId == q.bookId) {
+            formIndex = index;
+          }
+        });
+        this.selectedForm.splice(formIndex, 1);
+        // this.selectedForm.splice(this.selectedForm.indexOf(p), 1);
+        //这里p是对象 也可以用indexOf吗
+        //此处可以 地址是相同的?
       });
     },
     //确认本次选择的表单
     handleOk() {
       this.visible = false;
       //将搜索中选中的表push进总数据里
-      let arr = []
+      let arr = [];
       this.preSelectedForm.forEach(p => {
         let flag = this.selectedForm.some(q => {
-          return p.bookId == q.bookId
-        })
+          return p.bookId == q.bookId;
+        });
         if (!flag) {
-          arr.push(p)
+          arr.push(p);
         }
-      })
-      this.selectedForm.push(...arr)
+      });
+      this.selectedForm.push(...arr);
     },
     //选择表单
     onRowSelect(selectData, index) {
-      let arr = []
+      let arr = [];
       selectData.forEach(p => {
-        arr.push(p)
-      })
+        arr.push(p);
+      });
 
-      this.preSelectedForm = arr
+      this.preSelectedForm = arr;
+    },
+    //list提供的全选
+    setSelectAll() {
+      this.selectAll = !this.selectAll;
+      this.$refs.list.setSelectAll(this.selectAll);
     },
     //在返回数据后 需要做的一些操作
     init() {
@@ -631,19 +679,18 @@ export default {
 .box {
   padding-left: 160px;
   padding-right: 160px;
+  height: 100%;
 }
 
 .container {
   width: 80%;
-  /* height: 600px; */
   border: 1px solid rgb(215, 210, 209);
   margin: 0 auto;
-  /* padding: 20px; */
-  /* border-radius: 10px; */
+  height: 100%;
+  /* margin-top: 20px; */
 
   /* display: flex;
-  flex-direction: column;
-  justify-content: space-between; */
+  flex-direction: column; */
 }
 
 .search,
@@ -670,6 +717,7 @@ export default {
   margin-top: 20px;
   position: relative;
   height: 500px;
+  /* flex:1; */
 }
 
 .input {
@@ -711,7 +759,16 @@ span {
   background-color: rgb(245, 247, 250);
 }
 
-.ant-modal-body{
-  height:600px;
+.ant-modal-body {
+  height: 600px;
+}
+
+.ant-list-header {
+  padding-left: 8px !important;
+}
+
+/* loading样式 */
+.ant-skeleton {
+  height: 100%;
 }
 </style>
