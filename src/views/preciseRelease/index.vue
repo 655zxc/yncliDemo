@@ -1,5 +1,6 @@
 <template>
   <div class="box">
+    <yn-spin :spinning="isLoading">
     <div class="container">
       <div class="search">
         <div class="input">
@@ -43,7 +44,7 @@
         <yn-button type="primary" @click="cacheVisible = true"
           >构建缓存</yn-button
         >
-        <yn-button type="primary" @click="detectDifferences"
+        <yn-button type="primary" @click="differencesVisible = true"
           >检测差异</yn-button
         >
         <yn-button type="primary" @click="releaseVisible = true"
@@ -66,7 +67,7 @@
         ></yn-checkbox>
         <yn-page-list
           :tableConfig="tableConfig"
-          rowKey="bookId"
+          rowKey="sheetId"
           @table_change="onTableChange"
           :dataPanelSkeleton="dataPanelSkeleton"
           :autoHeight="true"
@@ -236,10 +237,16 @@
       <yn-modal v-model="cacheVisible" @ok="buildCache">
         <p>确定要构建缓存吗?</p>
       </yn-modal>
+      <yn-modal v-model="differencesVisible" @ok="detectDifferences">
+        <p>确定要检测差异吗?</p>
+      </yn-modal>
       <yn-modal v-model="releaseVisible" @ok="release">
         <p>确定要发布吗?</p>
       </yn-modal>
+      <!-- <yn-spin tip="Loading..." v-show="isLoading" class="loading">
+      </yn-spin> -->
     </div>
+  </yn-spin>
   </div>
 </template>
 <script>
@@ -262,68 +269,69 @@ export default {
       //list数据源
       tableConfig: {
         columns: [
-        {
-          title: "",
-          dataIndex: "bookId", //这一列的数据来源与data中的key
-          // width:100,
-          width: "10%",
-          align: "center",
-          scopedSlots: {
-            customRender: "firstCol" //这一列提供插槽,名为table.key
+          {
+            title: "",
+            dataIndex: "sheetId", //这一列的数据来源与data中的key
+            //这里应该不重要
+            // width:100,
+            width: "10%",
+            align: "center",
+            scopedSlots: {
+              customRender: "firstCol" //这一列提供插槽,名为table.key
+            }
+          },
+          {
+            title: "表单名称",
+            dataIndex: "bookName",
+            // width:200,
+            width: "30%"
+          },
+          {
+            title: "筛选维",
+            dataIndex: "dimension",
+            // width:200,
+            width: "30%"
+          },
+          {
+            title: "结构失效",
+            dataIndex: "structureSign",
+            // width:100,
+            width: "10%",
+            align: "center",
+            scopedSlots: {
+              customRender: "structureSign"
+            }
+          },
+          {
+            title: "公式失效",
+            dataIndex: "formulaSign",
+            // width:100,
+            width: "10%",
+            align: "center",
+            scopedSlots: {
+              customRender: "formulaSign"
+            }
+          },
+          {
+            title: "删除标识",
+            dataIndex: "deleteSign",
+            // width:100,
+            width: "10%",
+            align: "center",
+            scopedSlots: {
+              customRender: "deleteSign"
+            }
           }
-        },
-        {
-          title: "表单名称",
-          dataIndex: "bookName",
-          // width:200,
-          width: "30%"
-        },
-        {
-          title: "筛选维",
-          dataIndex: "dimension",
-          // width:200,
-          width: "30%"
-        },
-        {
-          title: "结构失效",
-          dataIndex: "structureSign",
-          // width:100,
-          width: "10%",
-          align: "center",
-          scopedSlots: {
-            customRender: "structureSign"
-          }
-        },
-        {
-          title: "公式失效",
-          dataIndex: "formulaSign",
-          // width:100,
-          width: "10%",
-          align: "center",
-          scopedSlots: {
-            customRender: "formulaSign"
-          }
-        },
-        {
-          title: "删除标识",
-          dataIndex: "deleteSign",
-          // width:100,
-          width: "10%",
-          align: "center",
-          scopedSlots: {
-            customRender: "deleteSign"
-          }
-        }
         ],
         dataSource: [],
         pagination: {
-        current: 1,
-        pageSize: 10, //这里会被init中的setPageSize修改
-        showQuickJumper: true,
-        total: 12,
-        pageSizeOptions: ["5", "10", "20", "30", "40", "50"],
-        showSizeChanger: true
-      }
+          current: 1,
+          pageSize: 10, //这里会被init中的setPageSize修改
+          showQuickJumper: true,
+          total: 12,
+          pageSizeOptions: ["5", "10", "20", "30", "40", "50"],
+          showSizeChanger: true
+        }
         // scroll:{ y: 400 }
       },
       //判断每一项是否被选中
@@ -339,7 +347,9 @@ export default {
         loading: false
       },
       cacheVisible: false,
-      releaseVisible: false
+      releaseVisible: false,
+      differencesVisible: false,
+      isLoading:false,
     };
   },
   computed: {
@@ -378,20 +388,18 @@ export default {
     search() {
       this.dataPanelSkeleton.loading = true;
       //search 默认请求第一页
-      let arr = []
+      let arr = [];
       this.selectedForm.forEach(p => {
-        arr.push(p.bookId)
-      })
-      let formPageSize = this.tableConfig.pagination.pageSize//默认每页数量
+        arr.push(p.bookId);
+      });
+      let formPageSize = this.tableConfig.pagination.pageSize; //默认每页数量
       if (localStorage.getItem("preciseReleasePageSize")) {
-        formPageSize = parseInt(
-          localStorage.getItem("preciseReleasePageSize")
-        );//根据缓存更新每页数量
-      } 
+        formPageSize = parseInt(localStorage.getItem("preciseReleasePageSize")); //根据缓存更新每页数量
+      }
 
-      let publishFlag = this.structureCheckbox == true ? "false" : "true"
-      let formulaFlag = this.formulaCheckbox == true ? "false" : "true"
-      
+      let publishFlag = this.structureCheckbox == true ? "false" : "true";
+      let formulaFlag = this.formulaCheckbox == true ? "false" : "true";
+
       let obj = {
         bookIds: arr,
         pageDimFilter: this.filterDimension,
@@ -403,196 +411,136 @@ export default {
 
       // console.log(obj);
 
-      DsUtils.post(`${api.getSearchList}`, obj).then(res => {
-        if (res.data.success) {
-          let data = res.data.data
-          let total = data.sheetInfos.length
-          this.tableConfig.pagination.total = total
+      DsUtils.post(`${api.getSearchList}`, obj)
+        .then(res => {
+          if (res.data.success) {
+            let data = res.data.data;
+            let total = data.sheetInfos.length;
+            this.tableConfig.pagination.total = total;
 
-          // console.log(data);
-          //根据total 创建一个长度为total的数组 用于分页
-          let arrData = []
 
-          data.sheetInfos.forEach(p => {
-            //布尔值转为字符串
-            //且结构和失效要置反
-            let sheetPublishFlag = p.publishFlag == true ? "false" : "true"
-            let sheetFormulaFlag = p.formulaFlag == true ? "false" : "true"
-            let sheetToDeleteFlag = p.toDeleteFlag == true ? "true" : "false"
+            // console.log(data);
+            //根据total 创建一个长度为total的数组 用于分页
+            let arrData = [];
 
-            
-            let arrobj = {
-              key:p.sheetId,
-              bookId: p.sheetId,
-              //修改
-              // sheetId:sheetId,
-              bookName: p.bookName,
-              dimension: p.pageDimName,
-              structureSign: sheetPublishFlag,
-              formulaSign: sheetFormulaFlag,
-              deleteSign: sheetToDeleteFlag
-            }
-            arrData.push(arrobj)
-          })
-          
-          this.tableConfig.dataSource = arrData;
-            this.$nextTick(() => {
-            this.init();
-          });
+            data.sheetInfos.forEach(p => {
+              //布尔值转为字符串
+              //且结构和失效要置反
+              let sheetPublishFlag = p.publishFlag == true ? "false" : "true";
+              let sheetFormulaFlag = p.formulaFlag == true ? "false" : "true";
+              let sheetToDeleteFlag = p.toDeleteFlag == true ? "true" : "false";
 
-          this.dataPanelSkeleton.loading = false;//写成finally
-        } else {
-            this.dataPanelSkeleton.loading = false;
+              let arrobj = {
+                key: p.sheetId,
+                bookId: p.bookId,
+                sheetId: p.sheetId,
+                bookName: p.bookName,
+                dimension: p.pageDimName,
+                structureSign: sheetPublishFlag,
+                formulaSign: sheetFormulaFlag,
+                deleteSign: sheetToDeleteFlag
+              };
+              arrData.push(arrobj);
+            });
+
+            this.tableConfig.dataSource = arrData;
+
+            //这里要等到页面出来后
+            //才能获取到title 可是为什么nextTick没用?之前用本地数据时可以
+            // this.$nextTick(() => {
+            setTimeout(() => {
+              this.init();
+            }, 0);
+            // });
+          } else {
             UiUtils.errorMessage(res.data.message);
           }
-      }).catch(err => {
-          this.dataPanelSkeleton.loading = false;
+        })
+        .catch(err => {
           UiUtils.errorMessage("未知错误");
           console.log(err);
+        })
+        .finally(() => {
+          this.dataPanelSkeleton.loading = false;
         });
-
-      
-      let data = [
-        {
-          //key用于pagelist组件,使用bookId的值
-          // key: "key1",
-          bookId: "key1",
-          bookName: "表单1",
-          // bookName: "表单1很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字",
-          dimension: "筛选维A",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key2",
-          bookId: "key2",
-          bookName: "表单2",
-          // bookName: "表单2很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字",
-          dimension: "筛选维A",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key3",
-          bookId: "key3",
-          bookName: "表单3",
-          // bookName: "表单3很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字",
-          dimension: "筛选维A",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key4",
-          bookId: "key4",
-          bookName: "表单4",
-          dimension: "筛选维B",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key5",
-          bookId: "key5",
-          bookName: "表单5",
-          dimension: "筛选维B",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key6",
-          bookId: "key6",
-          bookName: "表单6",
-          dimension: "筛选维C",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key7",
-          bookId: "key7",
-          bookName: "表单7",
-          dimension: "筛选维C",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key8",
-          bookId: "key8",
-          bookName: "表单8",
-          dimension: "筛选维C",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key9",
-          bookId: "key9",
-          bookName: "表单9",
-          dimension: "筛选维C",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key10",
-          bookId: "key10",
-          bookName: "表单10",
-          dimension: "筛选维D",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key11",
-          bookId: "key11",
-          bookName: "表单11",
-          dimension: "筛选维D",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        },
-        {
-          // key: "key12",
-          bookId: "key12",
-          bookName: "表单12",
-          dimension: "筛选维E",
-          structureSign: "true",
-          formulaSign: "false",
-          deleteSign: "true"
-        }
-      ];
-
-      
-
-      // setTimeout(() => {
-      //   this.tableConfig.dataSource = data;
-      //   this.$nextTick(() => {
-      //     this.init();
-      //   });
-
-      //   this.dataPanelSkeleton.loading = false;
-      // }, 1000);
     },
     buildCache() {
+      this.isLoading = true
       this.cacheVisible = false;
-      console.log("构建缓存");
+      let bookIds = [];
+      this.tableConfig.dataSource.forEach(p => {
+        if (bookIds.indexOf(p.bookId) == -1) {
+          bookIds.push(p.bookId);
+        }
+      });
+      let obj = {
+        bookIds: bookIds,
+        buildOrCheckAllForm: false
+      };
+      DsUtils.post(`${api.buildCache}`, obj)
+        .then(res => {
+          if (res.data.success) {
+            UiUtils.successMessage(res.data.data);
+          } else {
+            UiUtils.errorMessage(res.data.message);
+          }
+        })
+        .catch(err => {
+          UiUtils.errorMessage("未知错误");
+          console.log(err);
+        }).finally(() => {
+          this.isLoading = false
+        });
     },
     detectDifferences() {
-      //更新this.tableConfig.dataSource
+      this.isLoading = true
+      this.differencesVisible = false
+      let bookIds = [];
+      this.tableConfig.dataSource.forEach(p => {
+        if (bookIds.indexOf(p.bookId) == -1) {
+          bookIds.push(p.bookId);
+        }
+      });
+      let obj = {
+        bookIds: bookIds,
+        buildOrCheckAllForm: false
+      };
+
+      DsUtils.post(`${api.detectDifferences}`, obj)
+        .then(res => {
+          if (res.data.success) {
+            for (let i = 0; i < this.tableConfig.dataSource.length; i++){
+              for (let j = 0; j < res.data.data.sheetInfos.length; j++){
+                if (this.tableConfig.dataSource[i].sheetId == res.data.data.sheetInfos[j].sheetId) {   
+                  let sheetPublishFlag = res.data.data.sheetInfos[j].publishFlag == true ? "false" : "true";
+                  let sheetFormulaFlag = res.data.data.sheetInfos[j].formulaFlag == true ? "false" : "true";
+                  let sheetToDeleteFlag = res.data.data.sheetInfos[j].toDeleteFlag == true ? "true" : "false";
+                  this.tableConfig.dataSource[i].structureSign = sheetPublishFlag
+                  this.tableConfig.dataSource[i].formulaSign = sheetFormulaFlag
+                  this.tableConfig.dataSource[i].deleteSign = sheetToDeleteFlag
+                  break
+                }
+              }
+            }
+            UiUtils.successMessage("检测差异完成");
+          } else {
+            UiUtils.errorMessage(res.data.message);
+          }
+        })
+        .catch(err => {
+          UiUtils.errorMessage("未知错误");
+          console.log(err);
+        }).finally(() => {
+          this.isLoading = false
+        });
     },
     release() {
       this.releaseVisible = false;
-      console.log("发布");
     },
     structuralFailure() {
       //对被选中的数据的 structureSign 置反
       this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.bookId]) {
+        if (this.isChecked[p.sheetId]) {
           if (p.structureSign == "true") {
             this.$set(
               this.tableConfig.dataSource[index],
@@ -611,7 +559,7 @@ export default {
     },
     formulaFailure() {
       this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.bookId]) {
+        if (this.isChecked[p.sheetId]) {
           if (p.formulaSign == "true") {
             this.$set(
               this.tableConfig.dataSource[index],
@@ -630,7 +578,7 @@ export default {
     },
     deleteOperation() {
       this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.bookId]) {
+        if (this.isChecked[p.sheetId]) {
           if (p.deleteSign == "true") {
             this.$set(
               this.tableConfig.dataSource[index],
@@ -659,14 +607,15 @@ export default {
       //清空
       this.isChecked = {};
       this.tableConfig.dataSource.forEach(p => {
-        this.$set(this.isChecked, `${p.bookId}`, false);
+        this.$set(this.isChecked, `${p.sheetId}`, false);
       });
     },
     //创建标题的checkbox
     createTitleCheckbox() {
       //获取pagelist中标题最左的dom
-      let title = document.querySelector("[key='bookId']");
+      let title = document.querySelector("[key='sheetId']");
       let checkbox = document.querySelector(".allCheckbox");
+      // console.log(title);
       checkbox.style.left =
         title.getBoundingClientRect().width / 2 + 32 - 8 + "px";
       checkbox.style.top =
@@ -790,6 +739,8 @@ export default {
   margin: 0 auto;
   margin-top: 20px;
 
+  position: relative;
+
   /* height: 100%;
   display: flex;
   flex-direction: column; */
@@ -876,4 +827,11 @@ span {
 .ant-skeleton {
   height: 100%;
 }
+/* .loading{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -31px;
+  margin-top: -16px;
+} */
 </style>
