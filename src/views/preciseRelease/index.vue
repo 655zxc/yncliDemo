@@ -405,52 +405,51 @@ export default {
 
       DsUtils.post(`${api.getSearchList}`, obj).then(res => {
         if (res.data.success) {
-          console.log(res.data.data);
-          let total = res.data.data.total
+          let data = res.data.data
+          let total = data.sheetInfos.length
           this.tableConfig.pagination.total = total
 
+          // console.log(data);
           //根据total 创建一个长度为total的数组 用于分页
           let arrData = []
-          for (let i = 0; i < total; i++){
-            // let arrobj = {
-            //   bookId: "",
-            //   bookName: "",
-            //   formulaFlag: false,
-            //   sheetId: "",
-            //   pageDimName: "",
-            //   publishFlag: false,
-            //   toDeleteFlag: false
-            // }
+
+          data.sheetInfos.forEach(p => {
+            //布尔值转为字符串
+            //且结构和失效要置反
+            let sheetPublishFlag = p.publishFlag == true ? "false" : "true"
+            let sheetFormulaFlag = p.formulaFlag == true ? "false" : "true"
+            let sheetToDeleteFlag = p.toDeleteFlag == true ? "true" : "false"
+
+            
             let arrobj = {
-              key:i,
-              bookId: i,//应该改为sheetid
-              bookName: "",
-              dimension: "",
-              structureSign: "false",
-              formulaSign: "false",
-              deleteSign: "false"
+              key:p.sheetId,
+              bookId: p.sheetId,
+              //修改
+              // sheetId:sheetId,
+              bookName: p.bookName,
+              dimension: p.pageDimName,
+              structureSign: sheetPublishFlag,
+              formulaSign: sheetFormulaFlag,
+              deleteSign: sheetToDeleteFlag
             }
             arrData.push(arrobj)
-          }
-
-
-          //然后根据res.data.data设置当前页的数据
-
-          console.log(arrData);
-
+          })
+          
           this.tableConfig.dataSource = arrData;
             this.$nextTick(() => {
             this.init();
           });
 
-          this.dataPanelSkeleton.loading = false;
-          } else {
+          this.dataPanelSkeleton.loading = false;//写成finally
+        } else {
+            this.dataPanelSkeleton.loading = false;
             UiUtils.errorMessage(res.data.message);
           }
       }).catch(err => {
-          UiUtils.errorMessage("请求错误");
+          this.dataPanelSkeleton.loading = false;
+          UiUtils.errorMessage("未知错误");
           console.log(err);
-        });;
+        });
 
       
       let data = [
