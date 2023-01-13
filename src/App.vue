@@ -1,11 +1,11 @@
 <template>
   <div id="app">
 
-    <yn-spin :spinning="spinning" size="large">
+    <!-- <yn-spin :spinning="spinning" size="large"> -->
       <yn-locale-provider :locale="getLocale()">
         <preciseRelease />
       </yn-locale-provider> 
-    </yn-spin>
+    <!-- </yn-spin> -->
  
             <!-- <MainFrame /> -->
         <!-- 默认页面 -->

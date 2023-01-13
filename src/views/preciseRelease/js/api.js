@@ -4,12 +4,15 @@ const baseUrl = "192.168.110.84:8060"
 
 
 const getSearchForm = `http://${baseUrl}/ce/form/searchForm`
-const getSearchList = `http://${baseUrl}/`
-
+const getSearchList = `http://${baseUrl}/ce/form/querySheet`
+const buildCache = `http://${baseUrl}/ce/form/buildCache`
+const detectDifferences = `http://${baseUrl}/ce/form/detectDifferences`
 
 const api = {
     getSearchForm,
     getSearchList,
+    buildCache,
+    detectDifferences
 }
 
 

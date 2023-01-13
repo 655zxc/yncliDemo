@@ -40,11 +40,15 @@
         >
       </div>
       <div class="operation">
-        <yn-button type="primary" @click="buildCache">构建缓存</yn-button>
+        <yn-button type="primary" @click="cacheVisible = true"
+          >构建缓存</yn-button
+        >
         <yn-button type="primary" @click="detectDifferences"
           >检测差异</yn-button
         >
-        <yn-button type="primary" @click="release">发布</yn-button>
+        <yn-button type="primary" @click="releaseVisible = true"
+          >发布</yn-button
+        >
         <yn-button type="primary" @click="structuralFailure"
           >结构失效</yn-button
         >
@@ -66,6 +70,7 @@
           @table_change="onTableChange"
           :dataPanelSkeleton="dataPanelSkeleton"
           :autoHeight="true"
+          :tableDraggable="false"
         >
           <template slot="table.firstCol" slot-scope="text, record">
             <yn-checkbox
@@ -204,7 +209,12 @@
           </template>
         </yn-page-list>
       </div>
-      <yn-modal title="选择表单" v-model="visible" @ok="handleOk">
+      <yn-modal
+        title="选择表单"
+        v-model="visible"
+        @ok="handleOk"
+        class="selectFormModal"
+      >
         <yn-list
           itemLayout="horizontal"
           :dataSource="searchFormData"
@@ -222,6 +232,12 @@
             </yn-list-item-meta>
           </yn-list-item>
         </yn-list>
+      </yn-modal>
+      <yn-modal v-model="cacheVisible" @ok="buildCache">
+        <p>确定要构建缓存吗?</p>
+      </yn-modal>
+      <yn-modal v-model="releaseVisible" @ok="release">
+        <p>确定要发布吗?</p>
       </yn-modal>
     </div>
   </div>
@@ -245,9 +261,70 @@ export default {
       isShowTitleCheckbox: false,
       //list数据源
       tableConfig: {
-        columns: [],
+        columns: [
+        {
+          title: "",
+          dataIndex: "bookId", //这一列的数据来源与data中的key
+          // width:100,
+          width: "10%",
+          align: "center",
+          scopedSlots: {
+            customRender: "firstCol" //这一列提供插槽,名为table.key
+          }
+        },
+        {
+          title: "表单名称",
+          dataIndex: "bookName",
+          // width:200,
+          width: "30%"
+        },
+        {
+          title: "筛选维",
+          dataIndex: "dimension",
+          // width:200,
+          width: "30%"
+        },
+        {
+          title: "结构失效",
+          dataIndex: "structureSign",
+          // width:100,
+          width: "10%",
+          align: "center",
+          scopedSlots: {
+            customRender: "structureSign"
+          }
+        },
+        {
+          title: "公式失效",
+          dataIndex: "formulaSign",
+          // width:100,
+          width: "10%",
+          align: "center",
+          scopedSlots: {
+            customRender: "formulaSign"
+          }
+        },
+        {
+          title: "删除标识",
+          dataIndex: "deleteSign",
+          // width:100,
+          width: "10%",
+          align: "center",
+          scopedSlots: {
+            customRender: "deleteSign"
+          }
+        }
+        ],
         dataSource: [],
-        pagination: {}
+        pagination: {
+        current: 1,
+        pageSize: 10, //这里会被init中的setPageSize修改
+        showQuickJumper: true,
+        total: 12,
+        pageSizeOptions: ["5", "10", "20", "30", "40", "50"],
+        showSizeChanger: true
+      }
+        // scroll:{ y: 400 }
       },
       //判断每一项是否被选中
       isChecked: {},
@@ -260,10 +337,13 @@ export default {
       selectAll: false,
       dataPanelSkeleton: {
         loading: false
-      }
+      },
+      cacheVisible: false,
+      releaseVisible: false
     };
   },
   computed: {
+    displayHeight() {},
     isAllChecked() {
       //isAllChecked 一开始必须是false 否则会有闪烁效果 因为计算要时间?
       let result = false;
@@ -296,93 +376,117 @@ export default {
     onChangeStructure() {},
     onChangeFormula() {},
     search() {
-      //注意发送selectedForm不是formName
-      console.log(
-        this.selectedForm,
-        this.filterDimension,
-        this.structureCheckbox,
-        this.formulaCheckbox
-      );
+      this.dataPanelSkeleton.loading = true;
+      //search 默认请求第一页
+      let arr = []
+      this.selectedForm.forEach(p => {
+        arr.push(p.bookId)
+      })
+      let formPageSize = this.tableConfig.pagination.pageSize//默认每页数量
+      if (localStorage.getItem("preciseReleasePageSize")) {
+        formPageSize = parseInt(
+          localStorage.getItem("preciseReleasePageSize")
+        );//根据缓存更新每页数量
+      } 
 
-      let columns = [
-        {
-          title: "",
-          dataIndex: "bookId", //这一列的数据来源与data中的key
-          width: "10%",
-          align: "center",
-          scopedSlots: {
-            customRender: "firstCol" //这一列提供插槽,名为table.key
+      let publishFlag = this.structureCheckbox == true ? "false" : "true"
+      let formulaFlag = this.formulaCheckbox == true ? "false" : "true"
+      
+      let obj = {
+        bookIds: arr,
+        pageDimFilter: this.filterDimension,
+        publishFlag: publishFlag,
+        formulaFlag: formulaFlag,
+        pageNo: 1,
+        pageSize: formPageSize
+      };
+
+      // console.log(obj);
+
+      DsUtils.post(`${api.getSearchList}`, obj).then(res => {
+        if (res.data.success) {
+          console.log(res.data.data);
+          let total = res.data.data.total
+          this.tableConfig.pagination.total = total
+
+          //根据total 创建一个长度为total的数组 用于分页
+          let arrData = []
+          for (let i = 0; i < total; i++){
+            // let arrobj = {
+            //   bookId: "",
+            //   bookName: "",
+            //   formulaFlag: false,
+            //   sheetId: "",
+            //   pageDimName: "",
+            //   publishFlag: false,
+            //   toDeleteFlag: false
+            // }
+            let arrobj = {
+              key:i,
+              bookId: i,//应该改为sheetid
+              bookName: "",
+              dimension: "",
+              structureSign: "false",
+              formulaSign: "false",
+              deleteSign: "false"
+            }
+            arrData.push(arrobj)
           }
-        },
-        {
-          title: "表单名称",
-          dataIndex: "bookName",
-          width: "30%"
-        },
-        {
-          title: "筛选维",
-          dataIndex: "dimension",
-          width: "30%"
-        },
-        {
-          title: "结构失效",
-          dataIndex: "structureSign",
-          width: "10%",
-          align: "center",
-          scopedSlots: {
-            customRender: "structureSign"
+
+
+          //然后根据res.data.data设置当前页的数据
+
+          console.log(arrData);
+
+          this.tableConfig.dataSource = arrData;
+            this.$nextTick(() => {
+            this.init();
+          });
+
+          this.dataPanelSkeleton.loading = false;
+          } else {
+            UiUtils.errorMessage(res.data.message);
           }
-        },
-        {
-          title: "公式失效",
-          dataIndex: "formulaSign",
-          width: "10%",
-          align: "center",
-          scopedSlots: {
-            customRender: "formulaSign"
-          }
-        },
-        {
-          title: "删除标识",
-          dataIndex: "deleteSign",
-          width: "10%",
-          align: "center",
-          scopedSlots: {
-            customRender: "deleteSign"
-          }
-        }
-      ];
+      }).catch(err => {
+          UiUtils.errorMessage("请求错误");
+          console.log(err);
+        });;
+
+      
       let data = [
         {
           //key用于pagelist组件,使用bookId的值
-          key: "key1",
+          // key: "key1",
           bookId: "key1",
           bookName: "表单1",
+          // bookName: "表单1很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字",
           dimension: "筛选维A",
           structureSign: "true",
           formulaSign: "false",
           deleteSign: "true"
         },
         {
-          key: "key2",
+          // key: "key2",
           bookId: "key2",
           bookName: "表单2",
+          // bookName: "表单2很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字",
           dimension: "筛选维A",
           structureSign: "true",
           formulaSign: "false",
           deleteSign: "true"
         },
         {
-          key: "key3",
+          // key: "key3",
           bookId: "key3",
           bookName: "表单3",
+          // bookName: "表单3很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字很长的名字",
           dimension: "筛选维A",
           structureSign: "true",
           formulaSign: "false",
           deleteSign: "true"
         },
         {
-          key: "key4",
+          // key: "key4",
           bookId: "key4",
           bookName: "表单4",
           dimension: "筛选维B",
@@ -391,7 +495,7 @@ export default {
           deleteSign: "true"
         },
         {
-          key: "key5",
+          // key: "key5",
           bookId: "key5",
           bookName: "表单5",
           dimension: "筛选维B",
@@ -400,7 +504,7 @@ export default {
           deleteSign: "true"
         },
         {
-          key: "key6",
+          // key: "key6",
           bookId: "key6",
           bookName: "表单6",
           dimension: "筛选维C",
@@ -409,7 +513,7 @@ export default {
           deleteSign: "true"
         },
         {
-          key: "key7",
+          // key: "key7",
           bookId: "key7",
           bookName: "表单7",
           dimension: "筛选维C",
@@ -418,7 +522,7 @@ export default {
           deleteSign: "true"
         },
         {
-          key: "key8",
+          // key: "key8",
           bookId: "key8",
           bookName: "表单8",
           dimension: "筛选维C",
@@ -427,7 +531,7 @@ export default {
           deleteSign: "true"
         },
         {
-          key: "key9",
+          // key: "key9",
           bookId: "key9",
           bookName: "表单9",
           dimension: "筛选维C",
@@ -436,7 +540,7 @@ export default {
           deleteSign: "true"
         },
         {
-          key: "key10",
+          // key: "key10",
           bookId: "key10",
           bookName: "表单10",
           dimension: "筛选维D",
@@ -445,7 +549,7 @@ export default {
           deleteSign: "true"
         },
         {
-          key: "key11",
+          // key: "key11",
           bookId: "key11",
           bookName: "表单11",
           dimension: "筛选维D",
@@ -454,7 +558,7 @@ export default {
           deleteSign: "true"
         },
         {
-          key: "key12",
+          // key: "key12",
           bookId: "key12",
           bookName: "表单12",
           dimension: "筛选维E",
@@ -463,33 +567,29 @@ export default {
           deleteSign: "true"
         }
       ];
-      let page = {
-        current: 1,
-        pageSize: 10, //这里会被init中的setPageSize修改
-        showQuickJumper: true,
-        total: 12,
-        pageSizeOptions: ["5", "10", "20", "30", "40", "50"],
-        showSizeChanger: true
-      };
 
-      this.dataPanelSkeleton.loading = true;
+      
 
-      setTimeout(() => {
-        this.tableConfig.columns = columns;
-        this.tableConfig.dataSource = data;
-        this.tableConfig.pagination = page;
-        this.$nextTick(() => {
-          this.init();
-        });
+      // setTimeout(() => {
+      //   this.tableConfig.dataSource = data;
+      //   this.$nextTick(() => {
+      //     this.init();
+      //   });
 
-        this.dataPanelSkeleton.loading = false;
-      }, 1000);
+      //   this.dataPanelSkeleton.loading = false;
+      // }, 1000);
     },
-    buildCache() {},
+    buildCache() {
+      this.cacheVisible = false;
+      console.log("构建缓存");
+    },
     detectDifferences() {
       //更新this.tableConfig.dataSource
     },
-    release() {},
+    release() {
+      this.releaseVisible = false;
+      console.log("发布");
+    },
     structuralFailure() {
       //对被选中的数据的 structureSign 置反
       this.tableConfig.dataSource.forEach((p, index) => {
@@ -566,7 +666,7 @@ export default {
     //创建标题的checkbox
     createTitleCheckbox() {
       //获取pagelist中标题最左的dom
-      let title = document.querySelector(".resizable");
+      let title = document.querySelector("[key='bookId']");
       let checkbox = document.querySelector(".allCheckbox");
       checkbox.style.left =
         title.getBoundingClientRect().width / 2 + 32 - 8 + "px";
@@ -680,16 +780,19 @@ export default {
   padding-left: 160px;
   padding-right: 160px;
   height: 100%;
+
+  overflow: hidden;
+  /* 解决塌陷 */
 }
 
 .container {
   width: 80%;
   border: 1px solid rgb(215, 210, 209);
   margin: 0 auto;
-  height: 100%;
-  /* margin-top: 20px; */
+  margin-top: 20px;
 
-  /* display: flex;
+  /* height: 100%;
+  display: flex;
   flex-direction: column; */
 }
 
@@ -704,9 +807,12 @@ export default {
 }
 
 .searchedTags {
-  padding-left: 20px;
-  padding-right: 20px;
+  border-left: 20px solid white;
+  border-right: 20px solid white;
   margin-top: 20px;
+  max-height: 116px;
+  overflow: auto;
+  /* min-height: 32px; */
 }
 
 .ant-tag {
@@ -759,8 +865,8 @@ span {
   background-color: rgb(245, 247, 250);
 }
 
-.ant-modal-body {
-  height: 600px;
+.selectFormModal .ant-modal-body {
+  height: 400px;
 }
 
 .ant-list-header {
