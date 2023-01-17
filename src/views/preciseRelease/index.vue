@@ -1,252 +1,262 @@
 <template>
   <div class="box">
     <yn-spin :spinning="isLoading">
-    <div class="container">
-      <div class="search">
-        <div class="input">
-          <span class="searchLabel">表单名称:</span>
-          <yn-input v-model="formName">
-            <yn-icon-svg
-              size="large"
-              slot="suffix"
-              type="search"
-              @click="onSearchForm"
-              class="searchIcon"
-            />
-          </yn-input>
-        </div>
-        <div class="input">
-          <span class="searchLabel">筛选维:</span>
-          <yn-input v-model="filterDimension">
-            <!-- <yn-icon-svg slot="suffix" type="search" /> -->
-          </yn-input>
-        </div>
-        <yn-checkbox @change="onChangeStructure" v-model="structureCheckbox"
-          >结构失效</yn-checkbox
-        >
-        <yn-checkbox @change="onChangeFormula" v-model="formulaCheckbox"
-          >公式失效</yn-checkbox
-        >
-        <yn-button type="primary" @click="search">查询</yn-button>
-      </div>
-      <div class="searchedTags">
-        <span style="margin-right:15px;">选择的表单:</span>
-        <yn-tag
-          closable
-          v-for="p in selectedForm"
-          :key="p.bookId"
-          @close="cancelSelection(p)"
-          color="geekblue"
-          >{{ p.bookName }}</yn-tag
-        >
-      </div>
-      <div class="operation">
-        <yn-button type="primary" @click="cacheVisible = true"
-          >构建缓存</yn-button
-        >
-        <yn-button type="primary" @click="differencesVisible = true"
-          >检测差异</yn-button
-        >
-        <yn-button type="primary" @click="releaseVisible = true"
-          >发布</yn-button
-        >
-        <yn-button type="primary" @click="structuralFailure"
-          >结构失效</yn-button
-        >
-        <yn-button type="primary" @click="formulaFailure">公式失效</yn-button>
-        <yn-button type="primary" @click="deleteOperation">删除</yn-button>
-        <!-- <yn-button type="primary" @click="test">TEST</yn-button> -->
-      </div>
-      <div class="display" ref="displayRef">
-        <!-- 标题checkbox 是覆盖在pagelist上的 -->
-        <yn-checkbox
-          @change="onChangeAllCheckbox"
-          :checked="isAllChecked"
-          class="allCheckbox"
-          v-show="isShowTitleCheckbox"
-        ></yn-checkbox>
-        <yn-page-list
-          :tableConfig="tableConfig"
-          rowKey="sheetId"
-          @table_change="onTableChange"
-          :dataPanelSkeleton="dataPanelSkeleton"
-          :autoHeight="true"
-          :tableDraggable="false"
-        >
-          <template slot="table.firstCol" slot-scope="text, record">
-            <yn-checkbox
-              @change="onChangeColumnsCheckbox($event, record)"
-              v-model="isChecked[text]"
-            ></yn-checkbox>
-          </template>
-          <template slot="table.structureSign" slot-scope="text">
-            <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
-            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
-            <svg
-              style="height:18px;width: 18px;"
-              v-show="text == 'true'"
-              t="1673340108012"
-              class="icon"
-              viewBox="0 0 1024 1024"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-              p-id="4323"
-              width="200"
-              height="200"
-            >
-              <path
-                d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
-                p-id="4324"
-              ></path>
-              <path
-                d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
-                p-id="4325"
-              ></path>
-            </svg>
-            <svg
-              style="height:18px;width: 18px;"
-              v-show="text != 'true'"
-              t="1673340057297"
-              class="icon"
-              viewBox="0 0 1024 1024"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-              p-id="4183"
-              width="200"
-              height="200"
-            >
-              <path
-                d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
-                fill="#444654"
-                p-id="4184"
-              ></path>
-            </svg>
-          </template>
-          <template slot="table.formulaSign" slot-scope="text">
-            <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
-            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
-            <svg
-              style="height:18px;width: 18px;"
-              v-show="text == 'true'"
-              t="1673340108012"
-              class="icon"
-              viewBox="0 0 1024 1024"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-              p-id="4323"
-              width="200"
-              height="200"
-            >
-              <path
-                d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
-                p-id="4324"
-              ></path>
-              <path
-                d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
-                p-id="4325"
-              ></path>
-            </svg>
-            <svg
-              style="height:18px;width: 18px;"
-              v-show="text != 'true'"
-              t="1673340057297"
-              class="icon"
-              viewBox="0 0 1024 1024"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-              p-id="4183"
-              width="200"
-              height="200"
-            >
-              <path
-                d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
-                fill="#444654"
-                p-id="4184"
-              ></path>
-            </svg>
-          </template>
-          <template slot="table.deleteSign" slot-scope="text">
-            <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
-            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
-            <svg
-              style="height:18px;width: 18px;"
-              v-show="text == 'true'"
-              t="1673340108012"
-              class="icon"
-              viewBox="0 0 1024 1024"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-              p-id="4323"
-              width="200"
-              height="200"
-            >
-              <path
-                d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
-                p-id="4324"
-              ></path>
-              <path
-                d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
-                p-id="4325"
-              ></path>
-            </svg>
-            <svg
-              style="height:18px;width: 18px;"
-              v-show="text != 'true'"
-              t="1673340057297"
-              class="icon"
-              viewBox="0 0 1024 1024"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-              p-id="4183"
-              width="200"
-              height="200"
-            >
-              <path
-                d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
-                fill="#444654"
-                p-id="4184"
-              ></path>
-            </svg>
-          </template>
-        </yn-page-list>
-      </div>
-      <yn-modal
-        title="选择表单"
-        v-model="visible"
-        @ok="handleOk"
-        class="selectFormModal"
-      >
-        <yn-list
-          itemLayout="horizontal"
-          :dataSource="searchFormData"
-          rowKey="bookId"
-          @rowSelectChange="onRowSelect"
-          :rowSelection="true"
-          ref="list"
-        >
-          <div slot="header">
-            <yn-checkbox @change="setSelectAll">全选</yn-checkbox>
+      <div class="container">
+        <div class="search">
+          <div class="input">
+            <span class="searchLabel">搜索表单:</span>
+            <yn-input v-model="formName">
+              <yn-icon-svg
+                size="large"
+                slot="suffix"
+                type="search"
+                @click="onSearchForm"
+                class="searchIcon"
+              />
+            </yn-input>
           </div>
-          <yn-list-item slot="renderItem" slot-scope="item, index">
-            <yn-list-item-meta>
-              <span slot="title">{{ item.bookName }}</span>
-            </yn-list-item-meta>
-          </yn-list-item>
-        </yn-list>
-      </yn-modal>
-      <yn-modal v-model="cacheVisible" @ok="buildCache">
-        <p>确定要构建缓存吗?</p>
-      </yn-modal>
-      <yn-modal v-model="differencesVisible" @ok="detectDifferences">
-        <p>确定要检测差异吗?</p>
-      </yn-modal>
-      <yn-modal v-model="releaseVisible" @ok="release">
-        <p>确定要发布吗?</p>
-      </yn-modal>
-      <!-- <yn-spin tip="Loading..." v-show="isLoading" class="loading">
+          <div class="input">
+            <span class="searchLabel">筛选维:</span>
+            <yn-input v-model="filterDimension">
+              <!-- <yn-icon-svg slot="suffix" type="search" /> -->
+            </yn-input>
+          </div>
+          <div>
+            <span class="searchLabel">结构:</span>
+            <yn-select style="width: 80px" v-model="structureSelect">
+              <yn-select-option value="failure">失效</yn-select-option>
+              <yn-select-option value="noFailure">未失效</yn-select-option>
+              <yn-select-option value="all">全部</yn-select-option>
+            </yn-select>
+          </div>
+          <div>
+            <span class="searchLabel">公式:</span>
+            <yn-select style="width: 80px" v-model="formulaSelect">
+              <yn-select-option value="failure">失效</yn-select-option>
+              <yn-select-option value="noFailure">未失效</yn-select-option>
+              <yn-select-option value="all">全部</yn-select-option>
+            </yn-select>
+          </div>
+          <yn-button type="primary" @click="search">查询</yn-button>
+        </div>
+        <div class="searchedTags">
+          <span style="margin-right:15px;">选择的表单:</span>
+          <yn-tag
+            closable
+            v-for="p in selectedForm"
+            :key="p.bookId"
+            @close="cancelSelection(p)"
+            color="geekblue"
+            >{{ p.bookName }}</yn-tag
+          >
+        </div>
+        <div class="operation">
+          <!-- <yn-button type="primary" @click="cacheVisible = true"
+            >构建缓存</yn-button
+          > -->
+          <yn-button type="primary" @click="differencesVisible = true"
+            >检测差异</yn-button
+          >
+          <yn-button type="primary" @click="releaseVisible = true"
+            >发布</yn-button
+          >
+          <yn-button type="primary" @click="structuralFailure"
+            >结构失效</yn-button
+          >
+          <yn-button type="primary" @click="formulaFailure">公式失效</yn-button>
+          <yn-button type="primary" @click="deleteOperation">删除</yn-button>
+          <!-- <yn-button type="primary" @click="test">TEST</yn-button> -->
+        </div>
+        <div class="display" ref="displayRef">
+          <!-- 标题checkbox 是覆盖在pagelist上的 -->
+          <yn-checkbox
+            @change="onChangeAllCheckbox"
+            :checked="isAllChecked"
+            class="allCheckbox"
+            v-show="isShowTitleCheckbox"
+          ></yn-checkbox>
+          <yn-page-list
+            :tableConfig="tableConfig"
+            rowKey="sheetId"
+            @table_change="onTableChange"
+            :dataPanelSkeleton="dataPanelSkeleton"
+            :autoHeight="true"
+            :tableDraggable="false"
+          >
+            <template slot="table.firstCol" slot-scope="text, record">
+              <yn-checkbox
+                @change="onChangeColumnsCheckbox($event, record)"
+                v-model="isChecked[text]"
+              ></yn-checkbox>
+            </template>
+            <template slot="table.structureSign" slot-scope="text">
+              <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
+            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
+              <svg
+                style="height:18px;width: 18px;"
+                v-show="text == 'true'"
+                t="1673340108012"
+                class="icon"
+                viewBox="0 0 1024 1024"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                p-id="4323"
+                width="200"
+                height="200"
+              >
+                <path
+                  d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
+                  p-id="4324"
+                ></path>
+                <path
+                  d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
+                  p-id="4325"
+                ></path>
+              </svg>
+              <svg
+                style="height:18px;width: 18px;"
+                v-show="text != 'true'"
+                t="1673340057297"
+                class="icon"
+                viewBox="0 0 1024 1024"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                p-id="4183"
+                width="200"
+                height="200"
+              >
+                <path
+                  d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
+                  fill="#444654"
+                  p-id="4184"
+                ></path>
+              </svg>
+            </template>
+            <template slot="table.formulaSign" slot-scope="text">
+              <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
+            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
+              <svg
+                style="height:18px;width: 18px;"
+                v-show="text == 'true'"
+                t="1673340108012"
+                class="icon"
+                viewBox="0 0 1024 1024"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                p-id="4323"
+                width="200"
+                height="200"
+              >
+                <path
+                  d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
+                  p-id="4324"
+                ></path>
+                <path
+                  d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
+                  p-id="4325"
+                ></path>
+              </svg>
+              <svg
+                style="height:18px;width: 18px;"
+                v-show="text != 'true'"
+                t="1673340057297"
+                class="icon"
+                viewBox="0 0 1024 1024"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                p-id="4183"
+                width="200"
+                height="200"
+              >
+                <path
+                  d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
+                  fill="#444654"
+                  p-id="4184"
+                ></path>
+              </svg>
+            </template>
+            <template slot="table.deleteSign" slot-scope="text">
+              <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
+            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
+              <svg
+                style="height:18px;width: 18px;"
+                v-show="text == 'true'"
+                t="1673340108012"
+                class="icon"
+                viewBox="0 0 1024 1024"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                p-id="4323"
+                width="200"
+                height="200"
+              >
+                <path
+                  d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
+                  p-id="4324"
+                ></path>
+                <path
+                  d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
+                  p-id="4325"
+                ></path>
+              </svg>
+              <svg
+                style="height:18px;width: 18px;"
+                v-show="text != 'true'"
+                t="1673340057297"
+                class="icon"
+                viewBox="0 0 1024 1024"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                p-id="4183"
+                width="200"
+                height="200"
+              >
+                <path
+                  d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
+                  fill="#444654"
+                  p-id="4184"
+                ></path>
+              </svg>
+            </template>
+          </yn-page-list>
+        </div>
+        <yn-modal
+          title="选择表单"
+          v-model="visible"
+          @ok="handleOk"
+          class="selectFormModal"
+        >
+          <yn-list
+            itemLayout="horizontal"
+            :dataSource="searchFormData"
+            rowKey="bookId"
+            @rowSelectChange="onRowSelect"
+            :rowSelection="true"
+            ref="list"
+          >
+            <div slot="header">
+              <yn-checkbox @change="setSelectAll">全选</yn-checkbox>
+            </div>
+            <yn-list-item slot="renderItem" slot-scope="item, index">
+              <yn-list-item-meta>
+                <span slot="title">{{ item.bookName }}</span>
+              </yn-list-item-meta>
+            </yn-list-item>
+          </yn-list>
+        </yn-modal>
+        <!-- <yn-modal v-model="cacheVisible" @ok="buildCache">
+          <p>确定要构建缓存吗?</p>
+        </yn-modal> -->
+        <yn-modal v-model="differencesVisible" @ok="detectDifferences">
+          <p>确定要检测差异吗?</p>
+        </yn-modal>
+        <yn-modal v-model="releaseVisible" @ok="release">
+          <p>确定要发布吗?</p>
+        </yn-modal>
+        <!-- <yn-spin tip="Loading..." v-show="isLoading" class="loading">
       </yn-spin> -->
-    </div>
-  </yn-spin>
+      </div>
+    </yn-spin>
   </div>
 </template>
 <script>
@@ -263,8 +273,6 @@ export default {
     return {
       formName: "",
       filterDimension: "",
-      structureCheckbox: false,
-      formulaCheckbox: false,
       isShowTitleCheckbox: false,
       //list数据源
       tableConfig: {
@@ -326,10 +334,10 @@ export default {
         dataSource: [],
         pagination: {
           current: 1,
-          pageSize: 10, //这里会被init中的setPageSize修改
+          pageSize: 15, //这里会被init中的setPageSize修改
           showQuickJumper: true,
           total: 12,
-          pageSizeOptions: ["5", "10", "20", "30", "40", "50"],
+          pageSizeOptions: ["5", "10", "15", "20", "30", "40", "50", "100"],
           showSizeChanger: true
         }
         // scroll:{ y: 400 }
@@ -349,7 +357,9 @@ export default {
       cacheVisible: false,
       releaseVisible: false,
       differencesVisible: false,
-      isLoading:false,
+      isLoading: false,
+      structureSelect: "all",
+      formulaSelect: "all"
     };
   },
   computed: {
@@ -383,8 +393,6 @@ export default {
     // }
   },
   methods: {
-    onChangeStructure() {},
-    onChangeFormula() {},
     search() {
       this.dataPanelSkeleton.loading = true;
       //search 默认请求第一页
@@ -397,8 +405,18 @@ export default {
         formPageSize = parseInt(localStorage.getItem("preciseReleasePageSize")); //根据缓存更新每页数量
       }
 
-      let publishFlag = this.structureCheckbox == true ? "false" : "true";
-      let formulaFlag = this.formulaCheckbox == true ? "false" : "true";
+      let publishFlag =
+        this.structureSelect == "all"
+          ? ""
+          : this.structureSelect == "failure"
+          ? "false"
+          : "true";
+      let formulaFlag =
+        this.formulaSelect == "all"
+          ? ""
+          : this.formulaSelect == "failure"
+          ? "false"
+          : "true";
 
       let obj = {
         bookIds: arr,
@@ -417,7 +435,6 @@ export default {
             let data = res.data.data;
             let total = data.sheetInfos.length;
             this.tableConfig.pagination.total = total;
-
 
             // console.log(data);
             //根据total 创建一个长度为total的数组 用于分页
@@ -457,50 +474,55 @@ export default {
           }
         })
         .catch(err => {
-          UiUtils.errorMessage("未知错误");
+          UiUtils.errorMessage("error");
           console.log(err);
         })
         .finally(() => {
           this.dataPanelSkeleton.loading = false;
         });
     },
-    buildCache() {
-      this.isLoading = true
-      this.cacheVisible = false;
-      let bookIds = [];
-      this.tableConfig.dataSource.forEach(p => {
-        if (bookIds.indexOf(p.bookId) == -1) {
-          bookIds.push(p.bookId);
-        }
-      });
-      let obj = {
-        bookIds: bookIds,
-        buildOrCheckAllForm: false
-      };
-      DsUtils.post(`${api.buildCache}`, obj)
-        .then(res => {
-          if (res.data.success) {
-            UiUtils.successMessage(res.data.data);
-          } else {
-            UiUtils.errorMessage(res.data.message);
-          }
-        })
-        .catch(err => {
-          UiUtils.errorMessage("未知错误");
-          console.log(err);
-        }).finally(() => {
-          this.isLoading = false
-        });
-    },
+    // buildCache() {
+    //   this.isLoading = true;
+    //   this.cacheVisible = false;
+    //   let bookIds = [];
+    //   this.tableConfig.dataSource.forEach(p => {
+    //     if (bookIds.indexOf(p.bookId) == -1) {
+    //       bookIds.push(p.bookId);
+    //     }
+    //   });
+    //   let obj = {
+    //     bookIds: bookIds,
+    //     buildOrCheckAllForm: false
+    //   };
+    //   DsUtils.post(`${api.buildCache}`, obj)
+    //     .then(res => {
+    //       if (res.data.success) {
+    //         UiUtils.successMessage(res.data.data);
+    //       } else {
+    //         UiUtils.errorMessage(res.data.message);
+    //       }
+    //     })
+    //     .catch(err => {
+    //       UiUtils.errorMessage("error");
+    //       console.log(err);
+    //     })
+    //     .finally(() => {
+    //       this.isLoading = false;
+    //     });
+    // },
     detectDifferences() {
-      this.isLoading = true
-      this.differencesVisible = false
+      this.differencesVisible = false;
       let bookIds = [];
       this.tableConfig.dataSource.forEach(p => {
-        if (bookIds.indexOf(p.bookId) == -1) {
+        if (bookIds.indexOf(p.bookId) == -1 && this.isChecked[p.sheetId]) {
           bookIds.push(p.bookId);
         }
       });
+      if (bookIds.length == 0) {
+        UiUtils.errorMessage("请勾选要检测差异的表");
+        return;
+      }
+      this.isLoading = true;
       let obj = {
         bookIds: bookIds,
         buildOrCheckAllForm: false
@@ -509,16 +531,30 @@ export default {
       DsUtils.post(`${api.detectDifferences}`, obj)
         .then(res => {
           if (res.data.success) {
-            for (let i = 0; i < this.tableConfig.dataSource.length; i++){
-              for (let j = 0; j < res.data.data.sheetInfos.length; j++){
-                if (this.tableConfig.dataSource[i].sheetId == res.data.data.sheetInfos[j].sheetId) {   
-                  let sheetPublishFlag = res.data.data.sheetInfos[j].publishFlag == true ? "false" : "true";
-                  let sheetFormulaFlag = res.data.data.sheetInfos[j].formulaFlag == true ? "false" : "true";
-                  let sheetToDeleteFlag = res.data.data.sheetInfos[j].toDeleteFlag == true ? "true" : "false";
-                  this.tableConfig.dataSource[i].structureSign = sheetPublishFlag
-                  this.tableConfig.dataSource[i].formulaSign = sheetFormulaFlag
-                  this.tableConfig.dataSource[i].deleteSign = sheetToDeleteFlag
-                  break
+            for (let i = 0; i < this.tableConfig.dataSource.length; i++) {
+              for (let j = 0; j < res.data.data.sheetInfos.length; j++) {
+                if (
+                  this.tableConfig.dataSource[i].sheetId ==
+                  res.data.data.sheetInfos[j].sheetId
+                ) {
+                  let sheetPublishFlag =
+                    res.data.data.sheetInfos[j].publishFlag == true
+                      ? "false"
+                      : "true";
+                  let sheetFormulaFlag =
+                    res.data.data.sheetInfos[j].formulaFlag == true
+                      ? "false"
+                      : "true";
+                  let sheetToDeleteFlag =
+                    res.data.data.sheetInfos[j].toDeleteFlag == true
+                      ? "true"
+                      : "false";
+                  this.tableConfig.dataSource[
+                    i
+                  ].structureSign = sheetPublishFlag;
+                  this.tableConfig.dataSource[i].formulaSign = sheetFormulaFlag;
+                  this.tableConfig.dataSource[i].deleteSign = sheetToDeleteFlag;
+                  break;
                 }
               }
             }
@@ -528,14 +564,168 @@ export default {
           }
         })
         .catch(err => {
-          UiUtils.errorMessage("未知错误");
+          UiUtils.errorMessage("error");
           console.log(err);
-        }).finally(() => {
-          this.isLoading = false
+        })
+        .finally(() => {
+          this.isLoading = false;
         });
     },
     release() {
       this.releaseVisible = false;
+      let sheetInfos = [];
+      this.tableConfig.dataSource.forEach((p, index) => {
+        if (this.isChecked[p.sheetId]) {
+          let formulaFlag = p.formulaSign == "true" ? false : true;
+          let publishFlag = p.structureSign == "true" ? false : true;
+          let toDeleteFlag = p.deleteSign == "true" ? true : false;
+          let obj = {
+            bookId: p.bookId,
+            bookName: p.bookName,
+            formulaFlag: formulaFlag,
+            pageDimName: p.dimension,
+            publishFlag: publishFlag,
+            sheetId: p.sheetId,
+            toDeleteFlag: toDeleteFlag
+          };
+          sheetInfos.push(obj);
+        }
+      });
+      if (sheetInfos.length == 0) {
+        UiUtils.errorMessage("请勾选要发布的表");
+        return;
+      }
+      this.isLoading = true;
+      DsUtils.post(`${api.accuratePublish}`, { sheetInfos })
+        .then(res => {
+          if (res.data.success) {
+            // this.search()
+            // this.searchAfterRelease()
+            //这里应该是调用getSearchList
+            //得到的数据不要直接覆盖以前的数据
+            //只有勾选的数据需要修改
+
+
+
+
+
+
+            UiUtils.successMessage("发布完成");
+          } else {
+            UiUtils.errorMessage(res.data.message);
+          }
+        })
+        .catch(err => {
+          UiUtils.errorMessage("error");
+          console.log(err);
+        })
+        .finally(() => {
+          this.isLoading = false;
+        });
+    },
+    searchAfterRelease() {
+      this.dataPanelSkeleton.loading = true;
+      let arr = [];
+      this.selectedForm.forEach(p => {
+        arr.push(p.bookId);
+      });
+      let formPageSize = this.tableConfig.pagination.pageSize; //默认每页数量
+      if (localStorage.getItem("preciseReleasePageSize")) {
+        formPageSize = parseInt(localStorage.getItem("preciseReleasePageSize")); //根据缓存更新每页数量
+      }
+
+      let publishFlag =
+        this.structureSelect == "all"
+          ? ""
+          : this.structureSelect == "failure"
+          ? "false"
+          : "true";
+      let formulaFlag =
+        this.formulaSelect == "all"
+          ? ""
+          : this.formulaSelect == "failure"
+          ? "false"
+          : "true";
+
+      let obj = {
+        bookIds: arr,
+        pageDimFilter: this.filterDimension,
+        publishFlag: publishFlag,
+        formulaFlag: formulaFlag,
+        pageNo: 1,
+        pageSize: formPageSize
+      };
+
+      DsUtils.post(`${api.getSearchList}`, obj)
+        .then(res => {
+          if (res.data.success) {
+            let data = res.data.data;
+            // let total = data.sheetInfos.length;
+            // this.tableConfig.pagination.total = total;
+
+            // console.log(data);
+            //根据total 创建一个长度为total的数组 用于分页
+            let arrData = [];
+
+            data.sheetInfos.forEach(p => {
+              //布尔值转为字符串
+              //且结构和失效要置反
+              let sheetPublishFlag = p.publishFlag == true ? "false" : "true";
+              let sheetFormulaFlag = p.formulaFlag == true ? "false" : "true";
+              let sheetToDeleteFlag = p.toDeleteFlag == true ? "true" : "false";
+
+              let arrobj = {
+                key: p.sheetId,
+                bookId: p.bookId,
+                sheetId: p.sheetId,
+                bookName: p.bookName,
+                dimension: p.pageDimName,
+                structureSign: sheetPublishFlag,
+                formulaSign: sheetFormulaFlag,
+                deleteSign: sheetToDeleteFlag
+              };
+              arrData.push(arrobj);
+            });
+
+            //在这里
+            //遍历this.tableConfig.dataSource
+            //如果勾选,则去arrData里找相同sheetId的数据
+            //修改this.tableConfig.dataSource
+            //找不到,则删除这条数据
+
+            
+
+            this.tableConfig.dataSource.forEach(p => {
+              if (this.isChecked[p.sheetId]) {
+                let flag = false
+                arrData.forEach(q => {
+                  if (q.sheetId == p.sheetId) {
+                    //修改this.tableConfig.dataSource中的这条数据
+                    flag = true
+                  }
+                })
+
+                //如果没找到 则删除this.tableConfig.dataSource中的这条数据
+                if (!flag) {
+                  
+                }
+
+              }
+            })
+
+
+
+          } else {
+            UiUtils.errorMessage(res.data.message);
+          }
+        })
+        .catch(err => {
+          UiUtils.errorMessage("error");
+          console.log(err);
+        })
+        .finally(() => {
+          this.dataPanelSkeleton.loading = false;
+        });
     },
     structuralFailure() {
       //对被选中的数据的 structureSign 置反
@@ -553,6 +743,12 @@ export default {
               "structureSign",
               "true"
             );
+            //如果结构失效 公式也要一起失效
+            this.$set(
+              this.tableConfig.dataSource[index],
+              "formulaSign",
+              "true"
+            );
           }
         }
       });
@@ -564,6 +760,12 @@ export default {
             this.$set(
               this.tableConfig.dataSource[index],
               "formulaSign",
+              "false"
+            );
+            //如果公式不再失效 结构也不再失效
+            this.$set(
+              this.tableConfig.dataSource[index],
+              "structureSign",
               "false"
             );
           } else {
@@ -617,9 +819,9 @@ export default {
       let checkbox = document.querySelector(".allCheckbox");
       // console.log(title);
       checkbox.style.left =
-        title.getBoundingClientRect().width / 2 + 32 - 8 + "px";
+        title.getBoundingClientRect().width / 2 - 8 + "px";
       checkbox.style.top =
-        title.getBoundingClientRect().height / 2 + 12 - 8 - 2 + "px";
+        title.getBoundingClientRect().height / 2  - 8 - 2 + "px";
       //再计算display,计算差额
 
       this.isShowTitleCheckbox = true;
@@ -725,44 +927,44 @@ export default {
 </script>
 <style>
 .box {
-  padding-left: 160px;
-  padding-right: 160px;
   height: 100%;
-
   overflow: hidden;
   /* 解决塌陷 */
 }
 
 .container {
-  width: 80%;
-  border: 1px solid rgb(215, 210, 209);
-  margin: 0 auto;
-  margin-top: 20px;
-
+  width: 100%;
   position: relative;
 
-  /* height: 100%;
+  height: 100%;
   display: flex;
-  flex-direction: column; */
+  flex-direction: column;
 }
 
 .search,
 .operation {
   display: flex;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   align-items: center;
   padding-left: 20px;
   padding-right: 20px;
   margin-top: 20px;
 }
 
+.search > * {
+  margin-right: 20px;
+}
+
+.operation > * {
+  margin-right: 20px;
+}
+
 .searchedTags {
   border-left: 20px solid white;
   border-right: 20px solid white;
   margin-top: 20px;
-  max-height: 116px;
+  height: 58px;
   overflow: auto;
-  /* min-height: 32px; */
 }
 
 .ant-tag {
@@ -773,11 +975,11 @@ export default {
   margin-top: 20px;
   position: relative;
   height: 500px;
-  /* flex:1; */
+  flex: 1;
 }
 
 .input {
-  width: 250px !important;
+  width: 350px;
   display: flex;
 }
 
@@ -793,7 +995,7 @@ span {
 
 .searchLabel {
   line-height: 32px;
-  margin-right: 15px;
+  margin-right: 5px;
 }
 
 .allCheckbox {
@@ -834,4 +1036,18 @@ span {
   margin-left: -31px;
   margin-top: -16px;
 } */
+
+.ant-spin-nested-loading {
+  height: 100%;
+}
+
+.ant-spin-container {
+  height: 100%;
+}
+
+.ypl-data-panel{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-top: 0 !important;
+}
 </style>

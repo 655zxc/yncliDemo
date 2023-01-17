@@ -7,12 +7,15 @@ const getSearchForm = `http://${baseUrl}/ce/form/searchForm`
 const getSearchList = `http://${baseUrl}/ce/form/querySheet`
 const buildCache = `http://${baseUrl}/ce/form/buildCache`
 const detectDifferences = `http://${baseUrl}/ce/form/detectDifferences`
+const accuratePublish = `http://${baseUrl}/ce/form/accuratePublish`
+
 
 const api = {
     getSearchForm,
     getSearchList,
     buildCache,
-    detectDifferences
+    detectDifferences,
+    accuratePublish
 }
 
 
