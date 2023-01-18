@@ -253,8 +253,15 @@
         <yn-modal v-model="releaseVisible" @ok="release">
           <p>确定要发布吗?</p>
         </yn-modal>
-        <!-- <yn-spin tip="Loading..." v-show="isLoading" class="loading">
-      </yn-spin> -->
+
+        <yn-modal title="进度" v-model="progressVisible" cancelTetx="XX">
+          <div class="progress">
+            <yn-progress type="line" :percent="percent" status="active" />
+          </div>
+          <template slot="footer">
+            <div></div>
+          </template>
+        </yn-modal>
       </div>
     </yn-spin>
   </div>
@@ -267,6 +274,7 @@ import "yn-p1/libs/components/yn-list-item-meta/";
 import DsUtils from "yn-p1/libs/utils/DsUtils";
 import UiUtils from "yn-p1/libs/utils/UiUtils";
 import api from "./js/api";
+import { set } from "vue";
 export default {
   name: "preciseRelease",
   data() {
@@ -368,31 +376,22 @@ export default {
       isAllChecked: false,
       //上一次搜索的条件
       searchInfo: {
-        
+        bookIds: [],
+        pageDimFilter: "",
+        publishFlag: "",
+        formulaFlag: "",
+        pageNum: 1,
+        pageSize: 15
       },
+      percent: 0,
+      progressVisible: false,
+      timer: null
     };
   },
-  computed: {
-    displayHeight() {}
-
-    // checkboxLeft() {
-    //   console.log("触发");
-    //   let title = document.querySelector(".resizable");
-    //   if (title) {
-    //     return title.getBoundingClientRect().width / 2 + 32 - 8 + "px";
-    //   }
-    //   else {
-    //     return "0px"
-    //   }
-
-    // },
-    // checkboxTop() {
-
-    // }
-  },
+  computed: {},
   methods: {
     search(flag) {
-      //flag 0:跳页 1:查询
+      //flag 0:跳页 1:查询 2:检测或发布后调用
       this.tableConfig.loading = true;
       //search 默认请求第一页
       let arr = [];
@@ -431,16 +430,30 @@ export default {
 
       let pageNum = this.tableConfig.pagination.current;
 
-      let obj = {
-        bookIds: arr,
-        pageDimFilter: this.filterDimension,
-        publishFlag: publishFlag,
-        formulaFlag: formulaFlag,
-        pageNum: pageNum,
-        pageSize: formPageSize
-      };
+      let obj;
 
-      this.searchInfo = obj
+      if (flag != 1) {
+        obj = {
+          bookIds: this.searchInfo.bookIds,
+          pageDimFilter: this.searchInfo.pageDimFilter,
+          publishFlag: this.searchInfo.publishFlag,
+          formulaFlag: this.searchInfo.formulaFlag,
+          pageNum: this.tableConfig.pagination.current,
+          pageSize: this.tableConfig.pagination.pageSize
+        };
+      } else {
+        obj = {
+          bookIds: arr,
+          pageDimFilter: this.filterDimension,
+          publishFlag: publishFlag,
+          formulaFlag: formulaFlag,
+          pageNum: pageNum,
+          pageSize: formPageSize
+        };
+        this.searchInfo = obj;
+        //查询的时候,清除缓存勾选
+        this.data = {};
+      }
 
       DsUtils.post(`${api.getSearchList}`, obj)
         .then(res => {
@@ -510,35 +523,14 @@ export default {
     },
     detectDifferences() {
       this.differencesVisible = false;
-
-      let bookIds = [];
-      this.selectedForm.forEach(p => {
-        bookIds.push(p.bookId);
-      });
-
-      let publishFlag =
-        this.structureSelect == "all"
-          ? ""
-          : this.structureSelect == "failure"
-          ? "false"
-          : "true";
-      let formulaFlag =
-        this.formulaSelect == "all"
-          ? ""
-          : this.formulaSelect == "failure"
-          ? "false"
-          : "true";
-
       this.isLoading = true;
-
-
 
       //调用searchInfo 注意pageNum不需要调用
       let obj = {
-        bookIds: bookIds,
-        pageDimFilter: this.filterDimension,
-        publishFlag: publishFlag,
-        formulaFlag: formulaFlag,
+        bookIds: this.searchInfo.bookIds,
+        pageDimFilter: this.searchInfo.pageDimFilter,
+        publishFlag: this.searchInfo.publishFlag,
+        formulaFlag: this.searchInfo.formulaFlag,
         pageNum: this.tableConfig.pagination.current,
         pageSize: this.tableConfig.pagination.pageSize,
 
@@ -570,47 +562,16 @@ export default {
         }
       }
 
+      this.progressVisible = true;
+      this.percent = 0;
       DsUtils.post(`${api.detectDifferences}`, obj)
         .then(res => {
+          console.log(res);
           if (res.data.success) {
-            console.log(res.data.data.sheetInfos);
-
-            this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
-
-            this.clearChecked()
-
-            this.search(0)
-
-            //更新当前页 检测差异的表
-            //不需要管this.data
-            //因为下次切换到这页时,会把这页数据存入this.data
-            //这里更新this.tableConfig.dataSource只是临时的
-            //下次切回来还会重新请求后端
-            // res.data.data.sheetInfos.forEach(p => {
-            //   this.tableConfig.dataSource.forEach((q, index) => {
-            //     if (p.sheetId == q.sheetId) {
-            //       let sheetPublishFlag =
-            //         p.publishFlag == true ? "false" : "true";
-            //       let sheetFormulaFlag =
-            //         p.formulaFlag == true ? "false" : "true";
-            //       let sheetToDeleteFlag =
-            //         p.toDeleteFlag == true ? "true" : "false";
-
-            //       // this.tableConfig.dataSource[index]是一个对象,可以直接修改值类型
-            //       this.tableConfig.dataSource[
-            //         index
-            //       ].structureSign = sheetPublishFlag;
-            //       this.tableConfig.dataSource[
-            //         index
-            //       ].formulaSign = sheetFormulaFlag;
-            //       this.tableConfig.dataSource[
-            //         index
-            //       ].deleteSign = sheetToDeleteFlag;
-            //     }
-            //   });
-            // });
-
-            UiUtils.successMessage("检测差异完成");
+            // this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
+            // this.clearChecked();
+            // this.search(2);
+            this.detectDifferencesProgress(res.data.data);
           } else {
             UiUtils.errorMessage(res.data.message);
           }
@@ -622,35 +583,57 @@ export default {
         .finally(() => {
           this.isLoading = false;
         });
+    },
+    //和releaseProgress相同?
+    detectDifferencesProgress(id) {
+      let count = 1;
+      this.timer = setInterval(() => {
+        console.log(`轮询${count}`);
+        DsUtils.get(`${api.getTaskState}?taskId=${id}`)
+          .then(res => {
+            console.log(res);
+            if (res.data.data.state == "finish") {
+              clearInterval(this.timer);
+              this.percent = 100;
+              this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
+              this.clearChecked();
+              this.search(2);
+              this.isLoading = false;
+              this.progressVisible = false;
+              UiUtils.successMessage("发布完成");
+            } else if (res.data.data.state == "error") {
+              //这里可以设置progress为错误样式
+              clearInterval(this.timer);
+              UiUtils.errorMessage(res.data.data.stateInfo);
+              this.isLoading = false;
+              this.progressVisible = false;
+            } else {
+              //加载状态
+              this.percent = res.data.data.progress;
+            }
+          })
+          .catch(err => {
+            clearInterval(this.timer);
+            UiUtils.errorMessage("error");
+            console.log(err);
+            this.isLoading = false;
+            this.progressVisible = false;
+            
+          })
+          .finally(() => {
+            count++;
+          });
+      }, 250);
     },
     release() {
       this.releaseVisible = false;
-
-      let bookIds = [];
-      this.selectedForm.forEach(p => {
-        bookIds.push(p.bookId);
-      });
-
-      let publishFlag =
-        this.structureSelect == "all"
-          ? ""
-          : this.structureSelect == "failure"
-          ? "false"
-          : "true";
-      let formulaFlag =
-        this.formulaSelect == "all"
-          ? ""
-          : this.formulaSelect == "failure"
-          ? "false"
-          : "true";
-
       this.isLoading = true;
 
       let obj = {
-        bookIds: bookIds,
-        pageDimFilter: this.filterDimension,
-        publishFlag: publishFlag,
-        formulaFlag: formulaFlag,
+        bookIds: this.searchInfo.bookIds,
+        pageDimFilter: this.searchInfo.pageDimFilter,
+        publishFlag: this.searchInfo.publishFlag,
+        formulaFlag: this.searchInfo.formulaFlag,
         pageNum: this.tableConfig.pagination.current,
         pageSize: this.tableConfig.pagination.pageSize,
 
@@ -681,16 +664,13 @@ export default {
           }
         }
       }
+
+      this.progressVisible = true;
+      this.percent = 0;
       DsUtils.post(`${api.accuratePublish}`, obj)
         .then(res => {
           if (res.data.success) {
-            console.log(res.data.data);
-            this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
-
-            this.clearChecked()
-            this.search(0)
-
-            UiUtils.successMessage("发布完成");
+            this.releaseProgress(res.data.data);
           } else {
             UiUtils.errorMessage(res.data.message);
           }
@@ -698,107 +678,112 @@ export default {
         .catch(err => {
           UiUtils.errorMessage("error");
           console.log(err);
-        })
-        .finally(() => {
-          this.isLoading = false;
         });
     },
-    searchAfterRelease() {
-      this.dataPanelSkeleton.loading = true;
-      let arr = [];
-      this.selectedForm.forEach(p => {
-        arr.push(p.bookId);
-      });
-      let formPageSize = this.tableConfig.pagination.pageSize; //默认每页数量
-      if (localStorage.getItem("preciseReleasePageSize")) {
-        formPageSize = parseInt(localStorage.getItem("preciseReleasePageSize")); //根据缓存更新每页数量
-      }
+    releaseProgress(id) {
+      // //这里先发了一次,因为setInterval不会立即执行
+      // let flag = false;
+      // DsUtils.get(`${api.getTaskState}?taskId=${id}`)
+      //   .then(res => {
+      //     console.log(res);
+      //     if (res.data.data.state == "finish") {
+      //       this.percent = 100;
+      //       this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
+      //       this.clearChecked();
+      //       this.search(2);
+      //       this.isLoading = false;
+      //       this.progressVisible = false;
+      //       UiUtils.successMessage("发布完成");
+      //     } else if (res.data.data.state == "error") {
+      //       //这里可以设置progress为错误样式
+      //       UiUtils.errorMessage(res.data.data.stateInfo);
+      //       this.isLoading = false;
+      //       this.progressVisible = false;
+      //     } else {
+      //       //加载状态
+      //       flag = true;
+      //       this.percent = res.data.data.progress;
+      //       if (flag) {
+      //           this.timer = setInterval(() => {
+      //             console.log("轮询");
+      //             DsUtils.get(`${api.getTaskState}?taskId=${id}`)
+      //               .then(res => {
+      //                 console.log(res);
+      //                 if (res.data.data.state == "finish") {
+      //                   clearInterval(this.timer);
+      //                   this.percent = 100;
+      //                   this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
+      //                   this.clearChecked();
+      //                   this.search(2);
+      //                   this.isLoading = false;
+      //                   this.progressVisible = false;
+      //                   UiUtils.successMessage("发布完成");
+      //                 } else if (res.data.data.state == "error") {
+      //                   //这里可以设置progress为错误样式
+      //                   clearInterval(this.timer);
+      //                   UiUtils.errorMessage(res.data.data.stateInfo);
+      //                   this.isLoading = false;
+      //                   this.progressVisible = false;
+      //                 } else {
+      //                   //加载状态
+      //                   this.percent = res.data.data.progress;
+      //                 }
+      //               })
+      //               .catch(err => {
+      //                 clearInterval(this.timer);
+      //                 UiUtils.errorMessage("error");
+      //                 console.log(err);
+      //                 this.isLoading = false;
+      //                 this.progressVisible = false;
+      //               });
+      //           }, 100);
+      //         }
+      //     }
+      //   })
+      //   .catch(err => {
+      //     UiUtils.errorMessage("error");
+      //     console.log(err);
+      //     this.isLoading = false;
+      //     this.progressVisible = false;
+      //   });
 
-      let publishFlag =
-        this.structureSelect == "all"
-          ? ""
-          : this.structureSelect == "failure"
-          ? "false"
-          : "true";
-      let formulaFlag =
-        this.formulaSelect == "all"
-          ? ""
-          : this.formulaSelect == "failure"
-          ? "false"
-          : "true";
-
-      let obj = {
-        bookIds: arr,
-        pageDimFilter: this.filterDimension,
-        publishFlag: publishFlag,
-        formulaFlag: formulaFlag,
-        pageNum: 1,
-        pageSize: formPageSize
-      };
-
-      DsUtils.post(`${api.getSearchList}`, obj)
-        .then(res => {
-          if (res.data.success) {
-            let data = res.data.data;
-            // let total = data.sheetInfos.length;
-            // this.tableConfig.pagination.total = total;
-
-            // console.log(data);
-            //根据total 创建一个长度为total的数组 用于分页
-            let arrData = [];
-
-            data.sheetInfos.forEach(p => {
-              //布尔值转为字符串
-              //且结构和失效要置反
-              let sheetPublishFlag = p.publishFlag == true ? "false" : "true";
-              let sheetFormulaFlag = p.formulaFlag == true ? "false" : "true";
-              let sheetToDeleteFlag = p.toDeleteFlag == true ? "true" : "false";
-
-              let arrobj = {
-                key: p.sheetId,
-                bookId: p.bookId,
-                sheetId: p.sheetId,
-                bookName: p.bookName,
-                dimension: p.pageDimName,
-                structureSign: sheetPublishFlag,
-                formulaSign: sheetFormulaFlag,
-                deleteSign: sheetToDeleteFlag
-              };
-              arrData.push(arrobj);
-            });
-
-            //在这里
-            //遍历this.tableConfig.dataSource
-            //如果勾选,则去arrData里找相同sheetId的数据
-            //修改this.tableConfig.dataSource
-            //找不到,则删除这条数据
-
-            this.tableConfig.dataSource.forEach(p => {
-              if (this.isChecked[p.sheetId]) {
-                let flag = false;
-                arrData.forEach(q => {
-                  if (q.sheetId == p.sheetId) {
-                    //修改this.tableConfig.dataSource中的这条数据
-                    flag = true;
-                  }
-                });
-
-                //如果没找到 则删除this.tableConfig.dataSource中的这条数据
-                if (!flag) {
-                }
-              }
-            });
-          } else {
-            UiUtils.errorMessage(res.data.message);
-          }
-        })
-        .catch(err => {
-          UiUtils.errorMessage("error");
-          console.log(err);
-        })
-        .finally(() => {
-          this.dataPanelSkeleton.loading = false;
-        });
+      let count = 1;
+      this.timer = setInterval(() => {
+        console.log(`轮询${count}`);
+        DsUtils.get(`${api.getTaskState}?taskId=${id}`)
+          .then(res => {
+            console.log(res);
+            if (res.data.data.state == "finish") {
+              clearInterval(this.timer);
+              this.percent = 100;
+              this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
+              this.clearChecked();
+              this.search(2);
+              this.isLoading = false;
+              this.progressVisible = false;
+              UiUtils.successMessage("发布完成");
+            } else if (res.data.data.state == "error") {
+              //这里可以设置progress为错误样式
+              clearInterval(this.timer);
+              UiUtils.errorMessage(res.data.data.stateInfo);
+              this.isLoading = false;
+              this.progressVisible = false;
+            } else {
+              //加载状态
+              this.percent = res.data.data.progress;
+            }
+          })
+          .catch(err => {
+            clearInterval(this.timer);
+            UiUtils.errorMessage("error");
+            console.log(err);
+            this.isLoading = false;
+            this.progressVisible = false;
+          })
+          .finally(() => {
+            count++;
+          });
+      }, 250);
     },
     structuralFailure() {
       //对被选中的数据的 structureSign 置反
@@ -999,10 +984,19 @@ export default {
     },
     //清空勾选
     clearChecked() {
-      this.isAllChecked = false
+      this.isAllChecked = false;
       Object.keys(this.isChecked).forEach(p => {
-        this.isChecked[p] = false
-      })
+        this.isChecked[p] = false;
+      });
+    },
+    getProgress() {
+      setInterval(() => {
+        if (this.percent < 100) {
+          this.percent += 1;
+        } else {
+          this.percent = 0;
+        }
+      }, 100);
     },
     //在返回数据后 需要做的一些操作
     init() {
@@ -1011,7 +1005,9 @@ export default {
       this.setPageSize();
     }
   },
-  mounted() {}
+  mounted() {
+    this.search(1);
+  }
 };
 </script>
 <style>
@@ -1138,5 +1134,15 @@ span {
   padding-left: 0 !important;
   padding-right: 0 !important;
   padding-top: 0 !important;
+}
+
+/*进度条会导致下拉框闪烁 在这里取消下拉框的动画 */
+.ant-dropdown {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+.slide-up-enter,
+.slide-up-appear {
+  animation-duration: 0s;
 }
 </style>
