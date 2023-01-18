@@ -37,7 +37,7 @@
               <yn-select-option value="all">全部</yn-select-option>
             </yn-select>
           </div>
-          <yn-button type="primary" @click="search">查询</yn-button>
+          <yn-button type="primary" @click="search(1)">查询</yn-button>
         </div>
         <div class="searchedTags">
           <span style="margin-right:15px;">选择的表单:</span>
@@ -71,7 +71,7 @@
           <!-- 标题checkbox 是覆盖在pagelist上的 -->
           <yn-checkbox
             @change="onChangeAllCheckbox"
-            :checked="isAllChecked"
+            v-model="isAllChecked"
             class="allCheckbox"
             v-show="isShowTitleCheckbox"
           ></yn-checkbox>
@@ -274,6 +274,9 @@ export default {
       formName: "",
       filterDimension: "",
       isShowTitleCheckbox: false,
+      //已经加载过的数据
+      //key是sheetId,值是三个checkbox
+      data: {},
       //list数据源
       tableConfig: {
         columns: [
@@ -336,10 +339,11 @@ export default {
           current: 1,
           pageSize: 15, //这里会被init中的setPageSize修改
           showQuickJumper: true,
-          total: 12,
-          pageSizeOptions: ["5", "10", "15", "20", "30", "40", "50", "100"],
-          showSizeChanger: true
-        }
+          total: 12
+          // pageSizeOptions: ["5", "10", "15", "20", "30", "40", "50", "100"],
+          // showSizeChanger: true
+        },
+        loading: false
         // scroll:{ y: 400 }
       },
       //判断每一项是否被选中
@@ -359,24 +363,18 @@ export default {
       differencesVisible: false,
       isLoading: false,
       structureSelect: "all",
-      formulaSelect: "all"
+      formulaSelect: "all",
+      //是否通过点击实现全选
+      isAllChecked: false,
+      //上一次搜索的条件
+      searchInfo: {
+        
+      },
     };
   },
   computed: {
-    displayHeight() {},
-    isAllChecked() {
-      //isAllChecked 一开始必须是false 否则会有闪烁效果 因为计算要时间?
-      let result = false;
-      let flag = true;
-      for (let key in this.isChecked) {
-        //发现有未选中的 则
-        if (!this.isChecked[key]) {
-          flag = false;
-        }
-        result = flag;
-      }
-      return result;
-    }
+    displayHeight() {}
+
     // checkboxLeft() {
     //   console.log("触发");
     //   let title = document.querySelector(".resizable");
@@ -393,8 +391,9 @@ export default {
     // }
   },
   methods: {
-    search() {
-      this.dataPanelSkeleton.loading = true;
+    search(flag) {
+      //flag 0:跳页 1:查询
+      this.tableConfig.loading = true;
       //search 默认请求第一页
       let arr = [];
       this.selectedForm.forEach(p => {
@@ -418,22 +417,36 @@ export default {
           ? "false"
           : "true";
 
+      // let pageNum
+
+      // if (flag == 0) {
+      //   pageNum = this.tableConfig.pagination.current
+      // }
+
+      //查询时,当前页数重置为 1
+      if (flag == 1) {
+        this.tableConfig.pagination.current = 1;
+      }
+      //跳页时,在其它地方修改当前页数
+
+      let pageNum = this.tableConfig.pagination.current;
+
       let obj = {
         bookIds: arr,
         pageDimFilter: this.filterDimension,
         publishFlag: publishFlag,
         formulaFlag: formulaFlag,
-        pageNo: 1,
+        pageNum: pageNum,
         pageSize: formPageSize
       };
 
-      // console.log(obj);
+      this.searchInfo = obj
 
       DsUtils.post(`${api.getSearchList}`, obj)
         .then(res => {
           if (res.data.success) {
             let data = res.data.data;
-            let total = data.sheetInfos.length;
+            let total = data.total;
             this.tableConfig.pagination.total = total;
 
             // console.log(data);
@@ -457,7 +470,16 @@ export default {
                 formulaSign: sheetFormulaFlag,
                 deleteSign: sheetToDeleteFlag
               };
-              arrData.push(arrobj);
+
+              //将已加载的数据记录到this.data中
+              if (Object.keys(this.data).indexOf(p.sheetId) == -1) {
+                this.$set(this.data, p.sheetId, arrobj);
+              }
+
+              arrData.push(this.data[p.sheetId]);
+              //this.tableConfig.dataSource使用的都是this.data里的数据
+              //由于使用的是同一个地址
+              //structuralFailure在修改this.tableConfig.dataSource时,也会修改对应this.data里的数据
             });
 
             this.tableConfig.dataSource = arrData;
@@ -465,6 +487,11 @@ export default {
             //这里要等到页面出来后
             //才能获取到title 可是为什么nextTick没用?之前用本地数据时可以
             // this.$nextTick(() => {
+
+            if (flag == 1) {
+              //清空
+              this.isChecked = {};
+            }
             setTimeout(() => {
               this.init();
             }, 0);
@@ -478,86 +505,111 @@ export default {
           console.log(err);
         })
         .finally(() => {
-          this.dataPanelSkeleton.loading = false;
+          this.tableConfig.loading = false;
         });
     },
-    // buildCache() {
-    //   this.isLoading = true;
-    //   this.cacheVisible = false;
-    //   let bookIds = [];
-    //   this.tableConfig.dataSource.forEach(p => {
-    //     if (bookIds.indexOf(p.bookId) == -1) {
-    //       bookIds.push(p.bookId);
-    //     }
-    //   });
-    //   let obj = {
-    //     bookIds: bookIds,
-    //     buildOrCheckAllForm: false
-    //   };
-    //   DsUtils.post(`${api.buildCache}`, obj)
-    //     .then(res => {
-    //       if (res.data.success) {
-    //         UiUtils.successMessage(res.data.data);
-    //       } else {
-    //         UiUtils.errorMessage(res.data.message);
-    //       }
-    //     })
-    //     .catch(err => {
-    //       UiUtils.errorMessage("error");
-    //       console.log(err);
-    //     })
-    //     .finally(() => {
-    //       this.isLoading = false;
-    //     });
-    // },
     detectDifferences() {
       this.differencesVisible = false;
+
       let bookIds = [];
-      this.tableConfig.dataSource.forEach(p => {
-        if (bookIds.indexOf(p.bookId) == -1 && this.isChecked[p.sheetId]) {
-          bookIds.push(p.bookId);
-        }
+      this.selectedForm.forEach(p => {
+        bookIds.push(p.bookId);
       });
-      if (bookIds.length == 0) {
-        UiUtils.errorMessage("请勾选要检测差异的表");
-        return;
-      }
+
+      let publishFlag =
+        this.structureSelect == "all"
+          ? ""
+          : this.structureSelect == "failure"
+          ? "false"
+          : "true";
+      let formulaFlag =
+        this.formulaSelect == "all"
+          ? ""
+          : this.formulaSelect == "failure"
+          ? "false"
+          : "true";
+
       this.isLoading = true;
+
+
+
+      //调用searchInfo 注意pageNum不需要调用
       let obj = {
         bookIds: bookIds,
-        buildOrCheckAllForm: false
+        pageDimFilter: this.filterDimension,
+        publishFlag: publishFlag,
+        formulaFlag: formulaFlag,
+        pageNum: this.tableConfig.pagination.current,
+        pageSize: this.tableConfig.pagination.pageSize,
+
+        selectAll: this.isAllChecked,
+        selectSheetInfos: []
       };
+
+      //这里统计勾选的sheet,在已加载的data里去找
+      if (!this.isAllChecked) {
+        for (let key in this.data) {
+          if (this.isChecked[this.data[key].sheetId]) {
+            let formulaFlag =
+              this.data[key].formulaSign == "true" ? false : true;
+            let publishFlag =
+              this.data[key].structureSign == "true" ? false : true;
+            let toDeleteFlag =
+              this.data[key].deleteSign == "true" ? true : false;
+            let o = {
+              bookId: this.data[key].bookId,
+              bookName: this.data[key].bookName,
+              formulaFlag: formulaFlag,
+              pageDimName: this.data[key].dimension,
+              publishFlag: publishFlag,
+              sheetId: this.data[key].sheetId,
+              toDeleteFlag: toDeleteFlag
+            };
+            obj.selectSheetInfos.push(o);
+          }
+        }
+      }
 
       DsUtils.post(`${api.detectDifferences}`, obj)
         .then(res => {
           if (res.data.success) {
-            for (let i = 0; i < this.tableConfig.dataSource.length; i++) {
-              for (let j = 0; j < res.data.data.sheetInfos.length; j++) {
-                if (
-                  this.tableConfig.dataSource[i].sheetId ==
-                  res.data.data.sheetInfos[j].sheetId
-                ) {
-                  let sheetPublishFlag =
-                    res.data.data.sheetInfos[j].publishFlag == true
-                      ? "false"
-                      : "true";
-                  let sheetFormulaFlag =
-                    res.data.data.sheetInfos[j].formulaFlag == true
-                      ? "false"
-                      : "true";
-                  let sheetToDeleteFlag =
-                    res.data.data.sheetInfos[j].toDeleteFlag == true
-                      ? "true"
-                      : "false";
-                  this.tableConfig.dataSource[
-                    i
-                  ].structureSign = sheetPublishFlag;
-                  this.tableConfig.dataSource[i].formulaSign = sheetFormulaFlag;
-                  this.tableConfig.dataSource[i].deleteSign = sheetToDeleteFlag;
-                  break;
-                }
-              }
-            }
+            console.log(res.data.data.sheetInfos);
+
+            this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
+
+            this.clearChecked()
+
+            this.search(0)
+
+            //更新当前页 检测差异的表
+            //不需要管this.data
+            //因为下次切换到这页时,会把这页数据存入this.data
+            //这里更新this.tableConfig.dataSource只是临时的
+            //下次切回来还会重新请求后端
+            // res.data.data.sheetInfos.forEach(p => {
+            //   this.tableConfig.dataSource.forEach((q, index) => {
+            //     if (p.sheetId == q.sheetId) {
+            //       let sheetPublishFlag =
+            //         p.publishFlag == true ? "false" : "true";
+            //       let sheetFormulaFlag =
+            //         p.formulaFlag == true ? "false" : "true";
+            //       let sheetToDeleteFlag =
+            //         p.toDeleteFlag == true ? "true" : "false";
+
+            //       // this.tableConfig.dataSource[index]是一个对象,可以直接修改值类型
+            //       this.tableConfig.dataSource[
+            //         index
+            //       ].structureSign = sheetPublishFlag;
+            //       this.tableConfig.dataSource[
+            //         index
+            //       ].formulaSign = sheetFormulaFlag;
+            //       this.tableConfig.dataSource[
+            //         index
+            //       ].deleteSign = sheetToDeleteFlag;
+            //     }
+            //   });
+            // });
+
             UiUtils.successMessage("检测差异完成");
           } else {
             UiUtils.errorMessage(res.data.message);
@@ -573,42 +625,70 @@ export default {
     },
     release() {
       this.releaseVisible = false;
-      let sheetInfos = [];
-      this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.sheetId]) {
-          let formulaFlag = p.formulaSign == "true" ? false : true;
-          let publishFlag = p.structureSign == "true" ? false : true;
-          let toDeleteFlag = p.deleteSign == "true" ? true : false;
-          let obj = {
-            bookId: p.bookId,
-            bookName: p.bookName,
-            formulaFlag: formulaFlag,
-            pageDimName: p.dimension,
-            publishFlag: publishFlag,
-            sheetId: p.sheetId,
-            toDeleteFlag: toDeleteFlag
-          };
-          sheetInfos.push(obj);
-        }
+
+      let bookIds = [];
+      this.selectedForm.forEach(p => {
+        bookIds.push(p.bookId);
       });
-      if (sheetInfos.length == 0) {
-        UiUtils.errorMessage("请勾选要发布的表");
-        return;
-      }
+
+      let publishFlag =
+        this.structureSelect == "all"
+          ? ""
+          : this.structureSelect == "failure"
+          ? "false"
+          : "true";
+      let formulaFlag =
+        this.formulaSelect == "all"
+          ? ""
+          : this.formulaSelect == "failure"
+          ? "false"
+          : "true";
+
       this.isLoading = true;
-      DsUtils.post(`${api.accuratePublish}`, { sheetInfos })
+
+      let obj = {
+        bookIds: bookIds,
+        pageDimFilter: this.filterDimension,
+        publishFlag: publishFlag,
+        formulaFlag: formulaFlag,
+        pageNum: this.tableConfig.pagination.current,
+        pageSize: this.tableConfig.pagination.pageSize,
+
+        selectAll: this.isAllChecked,
+        selectSheetInfos: []
+      };
+
+      //这里统计勾选的sheet,在已加载的data里去找
+      if (!this.isAllChecked) {
+        for (let key in this.data) {
+          if (this.isChecked[this.data[key].sheetId]) {
+            let formulaFlag =
+              this.data[key].formulaSign == "true" ? false : true;
+            let publishFlag =
+              this.data[key].structureSign == "true" ? false : true;
+            let toDeleteFlag =
+              this.data[key].deleteSign == "true" ? true : false;
+            let o = {
+              bookId: this.data[key].bookId,
+              bookName: this.data[key].bookName,
+              formulaFlag: formulaFlag,
+              pageDimName: this.data[key].dimension,
+              publishFlag: publishFlag,
+              sheetId: this.data[key].sheetId,
+              toDeleteFlag: toDeleteFlag
+            };
+            obj.selectSheetInfos.push(o);
+          }
+        }
+      }
+      DsUtils.post(`${api.accuratePublish}`, obj)
         .then(res => {
           if (res.data.success) {
-            // this.search()
-            // this.searchAfterRelease()
-            //这里应该是调用getSearchList
-            //得到的数据不要直接覆盖以前的数据
-            //只有勾选的数据需要修改
+            console.log(res.data.data);
+            this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
 
-
-
-
-
+            this.clearChecked()
+            this.search(0)
 
             UiUtils.successMessage("发布完成");
           } else {
@@ -652,7 +732,7 @@ export default {
         pageDimFilter: this.filterDimension,
         publishFlag: publishFlag,
         formulaFlag: formulaFlag,
-        pageNo: 1,
+        pageNum: 1,
         pageSize: formPageSize
       };
 
@@ -693,28 +773,21 @@ export default {
             //修改this.tableConfig.dataSource
             //找不到,则删除这条数据
 
-            
-
             this.tableConfig.dataSource.forEach(p => {
               if (this.isChecked[p.sheetId]) {
-                let flag = false
+                let flag = false;
                 arrData.forEach(q => {
                   if (q.sheetId == p.sheetId) {
                     //修改this.tableConfig.dataSource中的这条数据
-                    flag = true
+                    flag = true;
                   }
-                })
+                });
 
                 //如果没找到 则删除this.tableConfig.dataSource中的这条数据
                 if (!flag) {
-                  
                 }
-
               }
-            })
-
-
-
+            });
           } else {
             UiUtils.errorMessage(res.data.message);
           }
@@ -803,13 +876,23 @@ export default {
         "preciseReleasePageSize",
         this.tableConfig.pagination.pageSize
       );
+
+      //在这里 调用getSearchForm
+      //直接调search吧?
+      this.search(0);
     },
     //创建数据控制checkbox
     createIsChecked() {
-      //清空
-      this.isChecked = {};
       this.tableConfig.dataSource.forEach(p => {
-        this.$set(this.isChecked, `${p.sheetId}`, false);
+        // 如果没有这条数据的checkbox状态记录 则创建
+        if (Object.keys(this.isChecked).indexOf(p.sheetId) == -1) {
+          //根据是否全选 决定状态
+          if (this.isAllChecked) {
+            this.$set(this.isChecked, `${p.sheetId}`, true);
+          } else {
+            this.$set(this.isChecked, `${p.sheetId}`, false);
+          }
+        }
       });
     },
     //创建标题的checkbox
@@ -818,10 +901,9 @@ export default {
       let title = document.querySelector("[key='sheetId']");
       let checkbox = document.querySelector(".allCheckbox");
       // console.log(title);
-      checkbox.style.left =
-        title.getBoundingClientRect().width / 2 - 8 + "px";
+      checkbox.style.left = title.getBoundingClientRect().width / 2 - 8 + "px";
       checkbox.style.top =
-        title.getBoundingClientRect().height / 2  - 8 - 2 + "px";
+        title.getBoundingClientRect().height / 2 - 8 - 2 + "px";
       //再计算display,计算差额
 
       this.isShowTitleCheckbox = true;
@@ -914,6 +996,13 @@ export default {
     setSelectAll() {
       this.selectAll = !this.selectAll;
       this.$refs.list.setSelectAll(this.selectAll);
+    },
+    //清空勾选
+    clearChecked() {
+      this.isAllChecked = false
+      Object.keys(this.isChecked).forEach(p => {
+        this.isChecked[p] = false
+      })
     },
     //在返回数据后 需要做的一些操作
     init() {
@@ -1045,7 +1134,7 @@ span {
   height: 100%;
 }
 
-.ypl-data-panel{
+.ypl-data-panel {
   padding-left: 0 !important;
   padding-right: 0 !important;
   padding-top: 0 !important;
