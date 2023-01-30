@@ -112,7 +112,8 @@ export default {
     menuId = (menuId && decodeURI(decodeURI(menuId))) || "metadataMenu";
     inTab = (inTab && decodeURI(decodeURI(inTab))) || menuId;
     roleId = roleId && decodeURI(decodeURI(roleId));
-    serviceName = (serviceName && decodeURI(decodeURI(serviceName))) || "ecs";
+    // serviceName = (serviceName && decodeURI(decodeURI(serviceName))) || "ecs";
+    serviceName = "",
     securityFlag = securityFlag && decodeURI(decodeURI(securityFlag));
     timeDelta = timeDelta && decodeURI(decodeURI(timeDelta));
     origin = origin && decodeURIComponent(origin);

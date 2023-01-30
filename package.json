@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "build2": "vue-cli-service build",
     "serve": "vue-cli-service serve --open",
     "build": "cross-env NODE_ENV=production node scripts/integrate.js",
     "buildTest": "vue-cli-service  build",

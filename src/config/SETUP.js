@@ -8,5 +8,13 @@ export const APPS = {
 };
 export const BACKEND = {
   NAME: "YN",
-  BASE_URL: "http://localhost:3000/application/"
+  BASE_URL: "/application/"
+  // BASE_URL: "http://localhost/application/"
+
+
+
+
+
+  //原本
+  // BASE_URL: "http://localhost:3000/application/"
 };

@@ -63,8 +63,13 @@
           <yn-button type="primary" @click="structuralFailure"
             >结构失效</yn-button
           >
+          <yn-button type="primary" @click="cancelStructuralFailure"
+            >取消结构失效</yn-button
+          >
           <yn-button type="primary" @click="formulaFailure">公式失效</yn-button>
+          <yn-button type="primary" @click="cancelFormulaFailure">取消公式失效</yn-button>
           <yn-button type="primary" @click="deleteOperation">删除</yn-button>
+          <yn-button type="primary" @click="cancelDeleteOperation">取消删除</yn-button>
           <!-- <yn-button type="primary" @click="test">TEST</yn-button> -->
         </div>
         <div class="display" ref="displayRef">
@@ -385,7 +390,13 @@ export default {
       },
       percent: 0,
       progressVisible: false,
-      timer: null
+      timer: null,
+      falseList: [],//记录全选状态下,取消的数据
+
+      //是否进行了全选并修改标识
+      isAllStructuralFailure: "",
+      isAllFormulaFailure: "",
+      isAllDeleteOperation:"",
     };
   },
   computed: {},
@@ -453,6 +464,12 @@ export default {
         this.searchInfo = obj;
         //查询的时候,清除缓存勾选
         this.data = {};
+        //清除全选缓存
+        this.isAllChecked = false
+        this.isAllStructuralFailure = ""
+        this.isAllFormulaFailure = ""
+        this.isAllDeleteOperation = ""
+        this.falseList = []
       }
 
       DsUtils.post(`${api.getSearchList}`, obj)
@@ -484,7 +501,32 @@ export default {
                 deleteSign: sheetToDeleteFlag
               };
 
-              //将已加载的数据记录到this.data中
+
+              //如果之前做了全选操作,并全部置为结构失效
+              //则新加载的数据,在缓存时也要置为失效
+              //而对于已加载的数据,虽然会走这一步,但是不会进入缓存中
+              //因此修改已加载数据的标识,不会被这一步覆盖
+              if (this.isAllStructuralFailure === true) {
+                arrobj.structureSign = "false"
+              }
+              if (this.isAllStructuralFailure === false) {
+                arrobj.structureSign = "true"
+              }
+              //如果是空字符串,则说明未进行全选操作,不需要处理
+              if (this.isAllFormulaFailure === true) {
+                arrobj.formulaSign = "false"
+              }
+              if (this.isAllFormulaFailure === false) {
+                arrobj.formulaSign = "true"
+              }
+              if (this.isAllDeleteOperation === true) {
+                arrobj.deleteSign = "true"
+              }
+              if (this.isAllDeleteOperation === false) {
+                arrobj.deleteSign = "false"
+              }
+
+              //若该数据是新加载的,则进入缓存
               if (Object.keys(this.data).indexOf(p.sheetId) == -1) {
                 this.$set(this.data, p.sheetId, arrobj);
               }
@@ -535,31 +577,41 @@ export default {
         pageSize: this.tableConfig.pagination.pageSize,
 
         selectAll: this.isAllChecked,
+        allPublishFlag:"",
+        allFormulaFlag:"",
+        allDeletedFlag:"",
+        excludeSheetInfos:[],
         selectSheetInfos: []
       };
 
-      //这里统计勾选的sheet,在已加载的data里去找
-      if (!this.isAllChecked) {
-        for (let key in this.data) {
-          if (this.isChecked[this.data[key].sheetId]) {
-            let formulaFlag =
-              this.data[key].formulaSign == "true" ? false : true;
-            let publishFlag =
-              this.data[key].structureSign == "true" ? false : true;
-            let toDeleteFlag =
-              this.data[key].deleteSign == "true" ? true : false;
-            let o = {
-              bookId: this.data[key].bookId,
-              bookName: this.data[key].bookName,
-              formulaFlag: formulaFlag,
-              pageDimName: this.data[key].dimension,
-              publishFlag: publishFlag,
-              sheetId: this.data[key].sheetId,
-              toDeleteFlag: toDeleteFlag
-            };
-            obj.selectSheetInfos.push(o);
-          }
+      //这里统计已加载的数据中,勾选的数据,在data里去找
+      for (let key in this.data) {
+        if (this.isChecked[this.data[key].sheetId]) {
+          let formulaFlag =
+            this.data[key].formulaSign == "true" ? false : true;
+          let publishFlag =
+            this.data[key].structureSign == "true" ? false : true;
+          let toDeleteFlag =
+            this.data[key].deleteSign == "true" ? true : false;
+          let o = {
+            bookId: this.data[key].bookId,
+            bookName: this.data[key].bookName,
+            formulaFlag: formulaFlag,
+            pageDimName: this.data[key].dimension,
+            publishFlag: publishFlag,
+            sheetId: this.data[key].sheetId,
+            toDeleteFlag: toDeleteFlag,
+          };
+          obj.selectSheetInfos.push(o);
         }
+      }
+    
+
+      if (this.isAllChecked){
+        obj.excludeSheetInfos = this.falseList
+        obj.allPublishFlag = this.isAllStructuralFailure
+        obj.allFormulaFlag = this.isAllFormulaFailure 
+        obj.allDeletedFlag = this.isAllDeleteOperation
       }
 
       this.progressVisible = true;
@@ -574,14 +626,19 @@ export default {
             this.detectDifferencesProgress(res.data.data);
           } else {
             UiUtils.errorMessage(res.data.message);
+            this.isLoading = false;
+            this.progressVisible = false;
           }
         })
         .catch(err => {
           UiUtils.errorMessage("error");
           console.log(err);
+          this.isLoading = false;
+          this.progressVisible = false;
         })
         .finally(() => {
-          this.isLoading = false;
+          // this.isLoading = false;
+          // this.progressVisible = false;
         });
     },
     //和releaseProgress相同?
@@ -595,12 +652,11 @@ export default {
             if (res.data.data.state == "finish") {
               clearInterval(this.timer);
               this.percent = 100;
-              this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
-              this.clearChecked();
+              this.clearChecked();//清空缓存,勾选等信息
               this.search(2);
               this.isLoading = false;
               this.progressVisible = false;
-              UiUtils.successMessage("发布完成");
+              UiUtils.successMessage("检测差异完成");
             } else if (res.data.data.state == "error") {
               //这里可以设置progress为错误样式
               clearInterval(this.timer);
@@ -614,7 +670,7 @@ export default {
           })
           .catch(err => {
             clearInterval(this.timer);
-            UiUtils.errorMessage("error");
+            // UiUtils.errorMessage("error");
             console.log(err);
             this.isLoading = false;
             this.progressVisible = false;
@@ -638,31 +694,40 @@ export default {
         pageSize: this.tableConfig.pagination.pageSize,
 
         selectAll: this.isAllChecked,
+        allPublishFlag:"",
+        allFormulaFlag:"",
+        allDeletedFlag:"",
+        excludeSheetInfos:[],
         selectSheetInfos: []
       };
 
-      //这里统计勾选的sheet,在已加载的data里去找
-      if (!this.isAllChecked) {
-        for (let key in this.data) {
-          if (this.isChecked[this.data[key].sheetId]) {
-            let formulaFlag =
-              this.data[key].formulaSign == "true" ? false : true;
-            let publishFlag =
-              this.data[key].structureSign == "true" ? false : true;
-            let toDeleteFlag =
-              this.data[key].deleteSign == "true" ? true : false;
-            let o = {
-              bookId: this.data[key].bookId,
-              bookName: this.data[key].bookName,
-              formulaFlag: formulaFlag,
-              pageDimName: this.data[key].dimension,
-              publishFlag: publishFlag,
-              sheetId: this.data[key].sheetId,
-              toDeleteFlag: toDeleteFlag
-            };
-            obj.selectSheetInfos.push(o);
-          }
+
+      for (let key in this.data) {
+        if (this.isChecked[this.data[key].sheetId]) {
+          let formulaFlag =
+            this.data[key].formulaSign == "true" ? false : true;
+          let publishFlag =
+            this.data[key].structureSign == "true" ? false : true;
+          let toDeleteFlag =
+            this.data[key].deleteSign == "true" ? true : false;
+          let o = {
+            bookId: this.data[key].bookId,
+            bookName: this.data[key].bookName,
+            formulaFlag: formulaFlag,
+            pageDimName: this.data[key].dimension,
+            publishFlag: publishFlag,
+            sheetId: this.data[key].sheetId,
+            toDeleteFlag: toDeleteFlag
+          };
+          obj.selectSheetInfos.push(o);
         }
+      }
+      
+      if (this.isAllChecked) {
+        obj.excludeSheetInfos = this.falseList
+        obj.allPublishFlag = this.isAllStructuralFailure
+        obj.allFormulaFlag = this.isAllFormulaFailure 
+        obj.allDeletedFlag = this.isAllDeleteOperation
       }
 
       this.progressVisible = true;
@@ -673,12 +738,20 @@ export default {
             this.releaseProgress(res.data.data);
           } else {
             UiUtils.errorMessage(res.data.message);
+            this.isLoading = false;
+            this.progressVisible = false;
           }
         })
         .catch(err => {
           UiUtils.errorMessage("error");
           console.log(err);
-        });
+          this.isLoading = false;
+          this.progressVisible = false;
+        })
+        .finally(() => {
+          // this.isLoading = false;
+          // this.progressVisible = false;
+        });;
     },
     releaseProgress(id) {
       // //这里先发了一次,因为setInterval不会立即执行
@@ -775,7 +848,7 @@ export default {
           })
           .catch(err => {
             clearInterval(this.timer);
-            UiUtils.errorMessage("error");
+            // UiUtils.errorMessage("error");
             console.log(err);
             this.isLoading = false;
             this.progressVisible = false;
@@ -786,73 +859,117 @@ export default {
       }, 250);
     },
     structuralFailure() {
-      //对被选中的数据的 structureSign 置反
-      this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.sheetId]) {
-          if (p.structureSign == "true") {
-            this.$set(
-              this.tableConfig.dataSource[index],
-              "structureSign",
-              "false"
-            );
-          } else {
-            this.$set(
-              this.tableConfig.dataSource[index],
+      //勾选被选中的数据的 structureSign 标识
+      //这里应该遍历缓存data的数据 而不是当前页面tableConfig.dataSource的数据
+      Object.keys(this.data).forEach(p => {
+        if (this.isChecked[this.data[p].sheetId]) {
+          this.$set(
+              this.data[p],
               "structureSign",
               "true"
             );
             //如果结构失效 公式也要一起失效
-            this.$set(
-              this.tableConfig.dataSource[index],
+          this.$set(
+              this.data[p],
               "formulaSign",
               "true"
             );
-          }
         }
-      });
+      })
+
+      //如果全选了
+      if (this.isAllChecked) {
+        this.isAllStructuralFailure = false
+        this.isAllFormulaFailure = false
+      }
     },
-    formulaFailure() {
-      this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.sheetId]) {
-          if (p.formulaSign == "true") {
-            this.$set(
-              this.tableConfig.dataSource[index],
-              "formulaSign",
-              "false"
-            );
-            //如果公式不再失效 结构也不再失效
-            this.$set(
-              this.tableConfig.dataSource[index],
+    cancelStructuralFailure() {
+      Object.keys(this.data).forEach(p => {
+        if (this.isChecked[this.data[p].sheetId]) {
+          this.$set(
+              this.data[p],
               "structureSign",
               "false"
             );
-          } else {
-            this.$set(
-              this.tableConfig.dataSource[index],
+        }
+      })
+
+      if (this.isAllChecked) {
+        this.isAllStructuralFailure = true
+      }
+    },
+    formulaFailure() {
+      Object.keys(this.data).forEach(p => {
+        if (this.isChecked[this.data[p].sheetId]) {
+          this.$set(
+              this.data[p],
               "formulaSign",
               "true"
             );
-          }
         }
-      });
+      })
+
+      if (this.isAllChecked) {
+        this.isAllFormulaFailure = false
+      }
+    },
+    cancelFormulaFailure() {
+      Object.keys(this.data).forEach(p => {
+        if (this.isChecked[this.data[p].sheetId]) {
+          this.$set(
+              this.data[p],
+              "formulaSign",
+              "false"
+          );
+          //如果公式不再失效 结构也不再失效
+          this.$set(
+              this.data[p],
+              "structureSign",
+              "false"
+          );
+        }
+      })
+
+      if (this.isAllChecked) {
+        this.isAllFormulaFailure = true
+        this.isAllStructuralFailure = true
+      }
     },
     deleteOperation() {
-      this.tableConfig.dataSource.forEach((p, index) => {
-        if (this.isChecked[p.sheetId]) {
-          if (p.deleteSign == "true") {
-            this.$set(
-              this.tableConfig.dataSource[index],
-              "deleteSign",
-              "false"
-            );
-          } else {
-            this.$set(this.tableConfig.dataSource[index], "deleteSign", "true");
-          }
+      Object.keys(this.data).forEach(p => {
+        if (this.isChecked[this.data[p].sheetId]) {
+          this.$set(this.data[p], "deleteSign", "true");
         }
-      });
+      })
+
+      if (this.isAllChecked) {
+        this.isAllDeleteOperation = true
+      }
     },
+    cancelDeleteOperation() {
+      Object.keys(this.data).forEach(p => {
+        if (this.isChecked[this.data[p].sheetId]) {
+          this.$set(this.data[p], "deleteSign", "false");
+        }
+      })
+
+      if (this.isAllChecked) {
+        this.isAllDeleteOperation = false
+      }
+    },
+    //选择数据的chechkbox
     onChangeColumnsCheckbox(e, record) {
-      // console.log(e, record);
+      //如果全选时取消这条数据
+      if (!e && this.isAllChecked) {
+        //记录
+        this.falseList.push(record.sheetId) 
+      }
+      //如果全选时取消后,再次勾选这条数据
+      if (e && this.isAllChecked && this.falseList.indexOf(record.sheetId) != -1) {
+        //删除记录
+        this.falseList.splice(this.falseList.indexOf(record.sheetId),1)
+      }
+      // console.log(this.falseList);
     },
     //改变分页器触发
     onTableChange(info) {
@@ -899,10 +1016,14 @@ export default {
         for (let key in this.isChecked) {
           this.isChecked[key] = true;
         }
+
+        //重新全选全部内容,清空falseList
+        this.falseList = []
       } else {
         for (let key in this.isChecked) {
           this.isChecked[key] = false;
         }
+
       }
     },
     setPageSize() {
@@ -984,10 +1105,14 @@ export default {
     },
     //清空勾选
     clearChecked() {
+      this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
       this.isAllChecked = false;
       Object.keys(this.isChecked).forEach(p => {
         this.isChecked[p] = false;
       });
+      this.isAllStructuralFailure = ""
+      this.isAllFormulaFailure = ""
+      this.isAllDeleteOperation = ""
     },
     getProgress() {
       setInterval(() => {
@@ -1007,6 +1132,8 @@ export default {
   },
   mounted() {
     this.search(1);
+
+    console.log("=======",""===false);
   }
 };
 </script>
