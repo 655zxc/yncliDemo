@@ -5,7 +5,7 @@
         <div class="search">
           <div class="input">
             <span class="searchLabel">搜索表单:</span>
-            <yn-input v-model="formName">
+            <yn-input v-model="formName" @pressEnter="onSearchForm">
               <yn-icon-svg
                 size="large"
                 slot="suffix"
@@ -25,7 +25,7 @@
             <span class="searchLabel">结构:</span>
             <yn-select style="width: 80px" v-model="structureSelect">
               <yn-select-option value="failure">失效</yn-select-option>
-              <yn-select-option value="noFailure">未失效</yn-select-option>
+              <yn-select-option value="noFailure">有效</yn-select-option>
               <yn-select-option value="all">全部</yn-select-option>
             </yn-select>
           </div>
@@ -33,7 +33,7 @@
             <span class="searchLabel">公式:</span>
             <yn-select style="width: 80px" v-model="formulaSelect">
               <yn-select-option value="failure">失效</yn-select-option>
-              <yn-select-option value="noFailure">未失效</yn-select-option>
+              <yn-select-option value="noFailure">有效</yn-select-option>
               <yn-select-option value="all">全部</yn-select-option>
             </yn-select>
           </div>
@@ -60,16 +60,24 @@
           <yn-button type="primary" @click="releaseVisible = true"
             >发布</yn-button
           >
-          <yn-button type="primary" @click="structuralFailure"
+          <yn-button type="primary" @click="structuralFailureVisible = true"
             >结构失效</yn-button
           >
-          <yn-button type="primary" @click="cancelStructuralFailure"
+          <!-- <yn-button type="primary" @click="cancelStructuralFailure"
             >取消结构失效</yn-button
+          > -->
+          <yn-button type="primary" @click="formulaFailureVisible = true"
+            >公式失效</yn-button
           >
-          <yn-button type="primary" @click="formulaFailure">公式失效</yn-button>
-          <yn-button type="primary" @click="cancelFormulaFailure">取消公式失效</yn-button>
-          <yn-button type="primary" @click="deleteOperation">删除</yn-button>
-          <yn-button type="primary" @click="cancelDeleteOperation">取消删除</yn-button>
+          <!-- <yn-button type="primary" @click="cancelFormulaFailure"
+            >取消公式失效</yn-button
+          > -->
+          <yn-button type="primary" @click="deleteOperationVisible = true"
+            >删除</yn-button
+          >
+          <!-- <yn-button type="primary" @click="cancelDeleteOperation"
+            >取消删除</yn-button
+          > -->
           <!-- <yn-button type="primary" @click="test">TEST</yn-button> -->
         </div>
         <div class="display" ref="displayRef">
@@ -95,133 +103,16 @@
               ></yn-checkbox>
             </template>
             <template slot="table.structureSign" slot-scope="text">
-              <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
-            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
-              <svg
-                style="height:18px;width: 18px;"
-                v-show="text == 'true'"
-                t="1673340108012"
-                class="icon"
-                viewBox="0 0 1024 1024"
-                version="1.1"
-                xmlns="http://www.w3.org/2000/svg"
-                p-id="4323"
-                width="200"
-                height="200"
-              >
-                <path
-                  d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
-                  p-id="4324"
-                ></path>
-                <path
-                  d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
-                  p-id="4325"
-                ></path>
-              </svg>
-              <svg
-                style="height:18px;width: 18px;"
-                v-show="text != 'true'"
-                t="1673340057297"
-                class="icon"
-                viewBox="0 0 1024 1024"
-                version="1.1"
-                xmlns="http://www.w3.org/2000/svg"
-                p-id="4183"
-                width="200"
-                height="200"
-              >
-                <path
-                  d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
-                  fill="#444654"
-                  p-id="4184"
-                ></path>
-              </svg>
+              <yn-tag color="volcano" v-if="text == true">失效</yn-tag>
+              <yn-tag color="white" v-else="">有效</yn-tag>
             </template>
             <template slot="table.formulaSign" slot-scope="text">
-              <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
-            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
-              <svg
-                style="height:18px;width: 18px;"
-                v-show="text == 'true'"
-                t="1673340108012"
-                class="icon"
-                viewBox="0 0 1024 1024"
-                version="1.1"
-                xmlns="http://www.w3.org/2000/svg"
-                p-id="4323"
-                width="200"
-                height="200"
-              >
-                <path
-                  d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
-                  p-id="4324"
-                ></path>
-                <path
-                  d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
-                  p-id="4325"
-                ></path>
-              </svg>
-              <svg
-                style="height:18px;width: 18px;"
-                v-show="text != 'true'"
-                t="1673340057297"
-                class="icon"
-                viewBox="0 0 1024 1024"
-                version="1.1"
-                xmlns="http://www.w3.org/2000/svg"
-                p-id="4183"
-                width="200"
-                height="200"
-              >
-                <path
-                  d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
-                  fill="#444654"
-                  p-id="4184"
-                ></path>
-              </svg>
+              <yn-tag color="volcano" v-if="text == true">失效</yn-tag>
+              <yn-tag color="white" v-else="">有效</yn-tag>
             </template>
             <template slot="table.deleteSign" slot-scope="text">
-              <!-- <yn-icon-svg type="check" v-show="text == 'true'" />
-            <yn-icon-svg type="close" v-show="text != 'true'" /> -->
-              <svg
-                style="height:18px;width: 18px;"
-                v-show="text == 'true'"
-                t="1673340108012"
-                class="icon"
-                viewBox="0 0 1024 1024"
-                version="1.1"
-                xmlns="http://www.w3.org/2000/svg"
-                p-id="4323"
-                width="200"
-                height="200"
-              >
-                <path
-                  d="M828.406 90.125H195.594c-58.219 0-105.469 47.25-105.469 105.469v632.812c0 58.219 47.25 105.469 105.469 105.469h632.812c58.219 0 105.469-47.25 105.469-105.469V195.594c0-58.219-47.25-105.469-105.469-105.469z m52.735 738.281c0 29.16-23.57 52.735-52.735 52.735H195.594c-29.11 0-52.735-23.575-52.735-52.735V195.594c0-29.11 23.625-52.735 52.735-52.735h632.812c29.16 0 52.735 23.625 52.735 52.735v632.812z"
-                  p-id="4324"
-                ></path>
-                <path
-                  d="M421.529 709.56a36.281 36.281 0 0 1-27.553-12.67L205.175 476.614a36.285 36.285 0 0 1 55.1-47.229L425.264 621.87l342.161-298.48a36.29 36.29 0 0 1 47.71 54.687L445.386 700.62a36.323 36.323 0 0 1-23.857 8.94z"
-                  p-id="4325"
-                ></path>
-              </svg>
-              <svg
-                style="height:18px;width: 18px;"
-                v-show="text != 'true'"
-                t="1673340057297"
-                class="icon"
-                viewBox="0 0 1024 1024"
-                version="1.1"
-                xmlns="http://www.w3.org/2000/svg"
-                p-id="4183"
-                width="200"
-                height="200"
-              >
-                <path
-                  d="M85.333333 170.24C85.333333 123.392 123.648 85.333333 170.24 85.333333h683.52C900.608 85.333333 938.666667 123.648 938.666667 170.24v683.52c0 46.890667-38.314667 84.906667-84.906667 84.906667H170.24C123.392 938.666667 85.333333 900.352 85.333333 853.76V170.24z m42.666667 42.88v597.76C128 857.898667 166.101333 896 213.12 896h597.76A85.12 85.12 0 0 0 896 810.88V213.12A85.12 85.12 0 0 0 810.88 128H213.12A85.12 85.12 0 0 0 128 213.12z"
-                  fill="#444654"
-                  p-id="4184"
-                ></path>
-              </svg>
+              <yn-tag color="volcano" v-if="text == true">需删除</yn-tag>
+              <yn-tag color="white" v-else="">有效</yn-tag>
             </template>
           </yn-page-list>
         </div>
@@ -258,8 +149,17 @@
         <yn-modal v-model="releaseVisible" @ok="release">
           <p>确定要发布吗?</p>
         </yn-modal>
+        <yn-modal v-model="structuralFailureVisible" @ok="structuralFailure">
+          <p>确定要将选择的实例置为结构失效吗?</p>
+        </yn-modal>
+        <yn-modal v-model="formulaFailureVisible" @ok="formulaFailure">
+          <p>确定要将选择的实例置为公式失效吗?</p>
+        </yn-modal>
+        <yn-modal v-model="deleteOperationVisible" @ok="deleteOperation">
+          <p>确定要删除选择的实例吗?</p>
+        </yn-modal>
 
-        <yn-modal title="进度" v-model="progressVisible" cancelTetx="XX">
+        <yn-modal title="进度" v-model="progressVisible" >
           <div class="progress">
             <yn-progress type="line" :percent="percent" status="active" />
           </div>
@@ -267,7 +167,14 @@
             <div></div>
           </template>
         </yn-modal>
-      </div>
+        <yn-modal v-model="showFormResultVisible" @ok="" class="showFormResultModal" :width="1200">
+          <p>检测差异完成!</p>
+          <p v-for="(p,index) in detectDifferencesResult" :key="index">{{ p }}</p>
+          <template slot="footer">
+            <yn-button @click="showFormResultVisible = false" type="primary">确定</yn-button>
+          </template>
+        </yn-modal>
+      </div> 
     </yn-spin>
   </div>
 </template>
@@ -391,18 +298,25 @@ export default {
       percent: 0,
       progressVisible: false,
       timer: null,
-      falseList: [],//记录全选状态下,取消的数据
+      falseList: [], //记录全选状态下,取消的数据
 
       //是否进行了全选并修改标识
-      isAllStructuralFailure: "",
-      isAllFormulaFailure: "",
-      isAllDeleteOperation:"",
+      // isAllStructuralFailure: "",
+      // isAllFormulaFailure: "",
+      // isAllDeleteOperation: "",
+
+      structuralFailureVisible: false,
+      formulaFailureVisible: false,
+      deleteOperationVisible: false,
+      showFormResultVisible: false,
+
+      detectDifferencesResult:[],
     };
   },
   computed: {},
   methods: {
     search(flag) {
-      //flag 0:跳页 1:查询 2:检测或发布后调用
+      //flag 0:跳页/标记失效 1:查询 2:检测或发布后调用
       this.tableConfig.loading = true;
       //search 默认请求第一页
       let arr = [];
@@ -418,20 +332,14 @@ export default {
         this.structureSelect == "all"
           ? ""
           : this.structureSelect == "failure"
-          ? "false"
-          : "true";
+          ? false
+          : true;
       let formulaFlag =
         this.formulaSelect == "all"
           ? ""
           : this.formulaSelect == "failure"
-          ? "false"
-          : "true";
-
-      // let pageNum
-
-      // if (flag == 0) {
-      //   pageNum = this.tableConfig.pagination.current
-      // }
+          ? false
+          : true;
 
       //查询时,当前页数重置为 1
       if (flag == 1) {
@@ -440,7 +348,6 @@ export default {
       //跳页时,在其它地方修改当前页数
 
       let pageNum = this.tableConfig.pagination.current;
-
       let obj;
 
       if (flag != 1) {
@@ -465,11 +372,8 @@ export default {
         //查询的时候,清除缓存勾选
         this.data = {};
         //清除全选缓存
-        this.isAllChecked = false
-        this.isAllStructuralFailure = ""
-        this.isAllFormulaFailure = ""
-        this.isAllDeleteOperation = ""
-        this.falseList = []
+        this.isAllChecked = false;
+        this.falseList = [];
       }
 
       DsUtils.post(`${api.getSearchList}`, obj)
@@ -486,9 +390,9 @@ export default {
             data.sheetInfos.forEach(p => {
               //布尔值转为字符串
               //且结构和失效要置反
-              let sheetPublishFlag = p.publishFlag == true ? "false" : "true";
-              let sheetFormulaFlag = p.formulaFlag == true ? "false" : "true";
-              let sheetToDeleteFlag = p.toDeleteFlag == true ? "true" : "false";
+              let sheetPublishFlag = !p.publishFlag;
+              let sheetFormulaFlag = !p.formulaFlag;
+              let sheetToDeleteFlag = p.toDeleteFlag;
 
               let arrobj = {
                 key: p.sheetId,
@@ -500,49 +404,16 @@ export default {
                 formulaSign: sheetFormulaFlag,
                 deleteSign: sheetToDeleteFlag
               };
-
-
-              //如果之前做了全选操作,并全部置为结构失效
-              //则新加载的数据,在缓存时也要置为失效
-              //而对于已加载的数据,虽然会走这一步,但是不会进入缓存中
-              //因此修改已加载数据的标识,不会被这一步覆盖
-              if (this.isAllStructuralFailure === true) {
-                arrobj.structureSign = "false"
-              }
-              if (this.isAllStructuralFailure === false) {
-                arrobj.structureSign = "true"
-              }
-              //如果是空字符串,则说明未进行全选操作,不需要处理
-              if (this.isAllFormulaFailure === true) {
-                arrobj.formulaSign = "false"
-              }
-              if (this.isAllFormulaFailure === false) {
-                arrobj.formulaSign = "true"
-              }
-              if (this.isAllDeleteOperation === true) {
-                arrobj.deleteSign = "true"
-              }
-              if (this.isAllDeleteOperation === false) {
-                arrobj.deleteSign = "false"
-              }
-
-              //若该数据是新加载的,则进入缓存
-              if (Object.keys(this.data).indexOf(p.sheetId) == -1) {
-                this.$set(this.data, p.sheetId, arrobj);
-              }
-
+              //覆盖缓存
+              this.$set(this.data, p.sheetId, arrobj);
               arrData.push(this.data[p.sheetId]);
               //this.tableConfig.dataSource使用的都是this.data里的数据
               //由于使用的是同一个地址
               //structuralFailure在修改this.tableConfig.dataSource时,也会修改对应this.data里的数据
             });
-
             this.tableConfig.dataSource = arrData;
-
             //这里要等到页面出来后
             //才能获取到title 可是为什么nextTick没用?之前用本地数据时可以
-            // this.$nextTick(() => {
-
             if (flag == 1) {
               //清空
               this.isChecked = {};
@@ -550,80 +421,206 @@ export default {
             setTimeout(() => {
               this.init();
             }, 0);
-            // });
           } else {
             UiUtils.errorMessage(res.data.message);
           }
         })
         .catch(err => {
-          UiUtils.errorMessage("error");
           console.log(err);
         })
         .finally(() => {
           this.tableConfig.loading = false;
         });
     },
+    getProgress(id, value) {
+      console.log(id, value);
+      let count = 1;
+      this.timer = setInterval(() => {
+        // console.log(`轮询${count}`);
+        DsUtils.get(`${api.getTaskState}?taskId=${id}`)
+          .then(res => {
+            // console.log(res);
+            if (res.data.data.state == "finish") {
+              clearInterval(this.timer);
+              this.percent = 100;
+              this.clearChecked(); //清空缓存,勾选等信息
+              this.search(2);
+              this.isLoading = false;
+              this.progressVisible = false;
+              if (value == "release") {
+                UiUtils.successMessage("发布完成");
+              } else if (value == "detect") {
+                UiUtils.successMessage("检测差异完成");
+                this.showFormResultVisible = true 
+
+                this.detectDifferencesResult = [
+                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
+                ]
+                
+              }
+            } else if (res.data.data.state == "error") {
+              //这里可以设置progress为错误样式
+              clearInterval(this.timer);
+              UiUtils.errorMessage(res.data.data.stateInfo);
+              this.isLoading = false;
+              this.progressVisible = false;
+              if (value == "detect") {
+                this.showFormResultVisible = true 
+
+
+
+              }
+            } else {
+              //加载状态
+              this.percent = res.data.data.progress;
+            }
+          })
+          .catch(err => {
+            clearInterval(this.timer);
+            // UiUtils.errorMessage("error");
+            console.log(err);
+            this.isLoading = false;
+            this.progressVisible = false;
+          })
+          .finally(() => {
+            count++;
+          });
+      }, 250);
+    },
+    //检测差异,发布,标识需要的参数
+    getParam(value) {
+      let obj = {
+        bookIds: this.searchInfo.bookIds,
+        pageDimFilter: this.searchInfo.pageDimFilter,
+        publishFlag: this.searchInfo.publishFlag,
+        formulaFlag: this.searchInfo.formulaFlag,
+        pageNum: this.tableConfig.pagination.current,
+        pageSize: this.tableConfig.pagination.pageSize,
+
+        selectAll: this.isAllChecked,
+        excludeSheetInfos: [],
+        selectSheetInfos: []
+      };
+
+      if (value == "structural") {
+        obj = {
+          ...obj,
+          publishInvalid: false,
+          formulaInvalid: true,
+          deletedInvalid: false
+        };
+      } else if (value == "formula") {
+        obj = {
+          ...obj,
+          publishInvalid: true,
+          formulaInvalid: false,
+          deletedInvalid: false
+        };
+      } else if (value == "delete") {
+        obj = {
+          ...obj,
+          publishInvalid: true,
+          formulaInvalid: true,
+          deletedInvalid: true
+        };
+      }
+
+      if (!this.isAllChecked) {
+        for (let key in this.data) {
+          if (this.isChecked[this.data[key].sheetId]) {
+            let formulaFlag = this.data[key].formulaSign == true ? false : true;
+            let publishFlag =
+              this.data[key].structureSign == true ? false : true;
+            let toDeleteFlag = this.data[key].deleteSign == true ? true : false;
+            let o = {
+              bookId: this.data[key].bookId,
+              bookName: this.data[key].bookName,
+              formulaFlag: formulaFlag,
+              pageDimName: this.data[key].dimension,
+              publishFlag: publishFlag,
+              sheetId: this.data[key].sheetId,
+              toDeleteFlag: toDeleteFlag
+            };
+            obj.selectSheetInfos.push(o);
+          }
+        }
+      }
+      if (this.isAllChecked) {
+        obj.excludeSheetInfos = this.falseList;
+      }
+
+      return obj;
+    },
+    //检测差异
     detectDifferences() {
       this.differencesVisible = false;
       this.isLoading = true;
 
-      //调用searchInfo 注意pageNum不需要调用
-      let obj = {
-        bookIds: this.searchInfo.bookIds,
-        pageDimFilter: this.searchInfo.pageDimFilter,
-        publishFlag: this.searchInfo.publishFlag,
-        formulaFlag: this.searchInfo.formulaFlag,
-        pageNum: this.tableConfig.pagination.current,
-        pageSize: this.tableConfig.pagination.pageSize,
-
-        selectAll: this.isAllChecked,
-        allPublishFlag:"",
-        allFormulaFlag:"",
-        allDeletedFlag:"",
-        excludeSheetInfos:[],
-        selectSheetInfos: []
-      };
-
-      //这里统计已加载的数据中,勾选的数据,在data里去找
-      for (let key in this.data) {
-        if (this.isChecked[this.data[key].sheetId]) {
-          let formulaFlag =
-            this.data[key].formulaSign == "true" ? false : true;
-          let publishFlag =
-            this.data[key].structureSign == "true" ? false : true;
-          let toDeleteFlag =
-            this.data[key].deleteSign == "true" ? true : false;
-          let o = {
-            bookId: this.data[key].bookId,
-            bookName: this.data[key].bookName,
-            formulaFlag: formulaFlag,
-            pageDimName: this.data[key].dimension,
-            publishFlag: publishFlag,
-            sheetId: this.data[key].sheetId,
-            toDeleteFlag: toDeleteFlag,
-          };
-          obj.selectSheetInfos.push(o);
-        }
-      }
-    
-
-      if (this.isAllChecked){
-        obj.excludeSheetInfos = this.falseList
-        obj.allPublishFlag = this.isAllStructuralFailure
-        obj.allFormulaFlag = this.isAllFormulaFailure 
-        obj.allDeletedFlag = this.isAllDeleteOperation
-      }
-
       this.progressVisible = true;
       this.percent = 0;
-      DsUtils.post(`${api.detectDifferences}`, obj)
+      DsUtils.post(`${api.detectDifferences}`, this.getParam("detect"))
         .then(res => {
           console.log(res);
           if (res.data.success) {
-            // this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
-            // this.clearChecked();
-            // this.search(2);
-            this.detectDifferencesProgress(res.data.data);
+            this.getProgress(res.data.data, "detect");
+            // this.detectDifferencesProgress(res.data.data);
           } else {
             UiUtils.errorMessage(res.data.message);
             this.isLoading = false;
@@ -631,111 +628,23 @@ export default {
           }
         })
         .catch(err => {
-          UiUtils.errorMessage("error");
           console.log(err);
           this.isLoading = false;
           this.progressVisible = false;
-        })
-        .finally(() => {
-          // this.isLoading = false;
-          // this.progressVisible = false;
         });
     },
-    //和releaseProgress相同?
-    detectDifferencesProgress(id) {
-      let count = 1;
-      this.timer = setInterval(() => {
-        console.log(`轮询${count}`);
-        DsUtils.get(`${api.getTaskState}?taskId=${id}`)
-          .then(res => {
-            console.log(res);
-            if (res.data.data.state == "finish") {
-              clearInterval(this.timer);
-              this.percent = 100;
-              this.clearChecked();//清空缓存,勾选等信息
-              this.search(2);
-              this.isLoading = false;
-              this.progressVisible = false;
-              UiUtils.successMessage("检测差异完成");
-            } else if (res.data.data.state == "error") {
-              //这里可以设置progress为错误样式
-              clearInterval(this.timer);
-              UiUtils.errorMessage(res.data.data.stateInfo);
-              this.isLoading = false;
-              this.progressVisible = false;
-            } else {
-              //加载状态
-              this.percent = res.data.data.progress;
-            }
-          })
-          .catch(err => {
-            clearInterval(this.timer);
-            // UiUtils.errorMessage("error");
-            console.log(err);
-            this.isLoading = false;
-            this.progressVisible = false;
-            
-          })
-          .finally(() => {
-            count++;
-          });
-      }, 250);
-    },
+    //发布
     release() {
       this.releaseVisible = false;
       this.isLoading = true;
 
-      let obj = {
-        bookIds: this.searchInfo.bookIds,
-        pageDimFilter: this.searchInfo.pageDimFilter,
-        publishFlag: this.searchInfo.publishFlag,
-        formulaFlag: this.searchInfo.formulaFlag,
-        pageNum: this.tableConfig.pagination.current,
-        pageSize: this.tableConfig.pagination.pageSize,
-
-        selectAll: this.isAllChecked,
-        allPublishFlag:"",
-        allFormulaFlag:"",
-        allDeletedFlag:"",
-        excludeSheetInfos:[],
-        selectSheetInfos: []
-      };
-
-
-      for (let key in this.data) {
-        if (this.isChecked[this.data[key].sheetId]) {
-          let formulaFlag =
-            this.data[key].formulaSign == "true" ? false : true;
-          let publishFlag =
-            this.data[key].structureSign == "true" ? false : true;
-          let toDeleteFlag =
-            this.data[key].deleteSign == "true" ? true : false;
-          let o = {
-            bookId: this.data[key].bookId,
-            bookName: this.data[key].bookName,
-            formulaFlag: formulaFlag,
-            pageDimName: this.data[key].dimension,
-            publishFlag: publishFlag,
-            sheetId: this.data[key].sheetId,
-            toDeleteFlag: toDeleteFlag
-          };
-          obj.selectSheetInfos.push(o);
-        }
-      }
-      
-      if (this.isAllChecked) {
-        obj.excludeSheetInfos = this.falseList
-        obj.allPublishFlag = this.isAllStructuralFailure
-        obj.allFormulaFlag = this.isAllFormulaFailure 
-        obj.allDeletedFlag = this.isAllDeleteOperation
-      }
-
       this.progressVisible = true;
       this.percent = 0;
-      DsUtils.post(`${api.accuratePublish}`, obj)
+      DsUtils.post(`${api.accuratePublish}`, this.getParam("release"))
         .then(res => {
           if (res.data.success) {
-            this.releaseProgress(res.data.data);
+            this.getProgress(res.data.data, "release");
+            // this.releaseProgress(res.data.data);
           } else {
             UiUtils.errorMessage(res.data.message);
             this.isLoading = false;
@@ -743,231 +652,58 @@ export default {
           }
         })
         .catch(err => {
-          UiUtils.errorMessage("error");
           console.log(err);
           this.isLoading = false;
           this.progressVisible = false;
-        })
-        .finally(() => {
-          // this.isLoading = false;
-          // this.progressVisible = false;
-        });;
+        });
     },
-    releaseProgress(id) {
-      // //这里先发了一次,因为setInterval不会立即执行
-      // let flag = false;
-      // DsUtils.get(`${api.getTaskState}?taskId=${id}`)
-      //   .then(res => {
-      //     console.log(res);
-      //     if (res.data.data.state == "finish") {
-      //       this.percent = 100;
-      //       this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
-      //       this.clearChecked();
-      //       this.search(2);
-      //       this.isLoading = false;
-      //       this.progressVisible = false;
-      //       UiUtils.successMessage("发布完成");
-      //     } else if (res.data.data.state == "error") {
-      //       //这里可以设置progress为错误样式
-      //       UiUtils.errorMessage(res.data.data.stateInfo);
-      //       this.isLoading = false;
-      //       this.progressVisible = false;
-      //     } else {
-      //       //加载状态
-      //       flag = true;
-      //       this.percent = res.data.data.progress;
-      //       if (flag) {
-      //           this.timer = setInterval(() => {
-      //             console.log("轮询");
-      //             DsUtils.get(`${api.getTaskState}?taskId=${id}`)
-      //               .then(res => {
-      //                 console.log(res);
-      //                 if (res.data.data.state == "finish") {
-      //                   clearInterval(this.timer);
-      //                   this.percent = 100;
-      //                   this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
-      //                   this.clearChecked();
-      //                   this.search(2);
-      //                   this.isLoading = false;
-      //                   this.progressVisible = false;
-      //                   UiUtils.successMessage("发布完成");
-      //                 } else if (res.data.data.state == "error") {
-      //                   //这里可以设置progress为错误样式
-      //                   clearInterval(this.timer);
-      //                   UiUtils.errorMessage(res.data.data.stateInfo);
-      //                   this.isLoading = false;
-      //                   this.progressVisible = false;
-      //                 } else {
-      //                   //加载状态
-      //                   this.percent = res.data.data.progress;
-      //                 }
-      //               })
-      //               .catch(err => {
-      //                 clearInterval(this.timer);
-      //                 UiUtils.errorMessage("error");
-      //                 console.log(err);
-      //                 this.isLoading = false;
-      //                 this.progressVisible = false;
-      //               });
-      //           }, 100);
-      //         }
-      //     }
-      //   })
-      //   .catch(err => {
-      //     UiUtils.errorMessage("error");
-      //     console.log(err);
-      //     this.isLoading = false;
-      //     this.progressVisible = false;
-      //   });
-
-      let count = 1;
-      this.timer = setInterval(() => {
-        console.log(`轮询${count}`);
-        DsUtils.get(`${api.getTaskState}?taskId=${id}`)
-          .then(res => {
-            console.log(res);
-            if (res.data.data.state == "finish") {
-              clearInterval(this.timer);
-              this.percent = 100;
-              this.data = {}; //清空已加载数据,防止复用旧数据,跳页时会加载新数据
-              this.clearChecked();
-              this.search(2);
-              this.isLoading = false;
-              this.progressVisible = false;
-              UiUtils.successMessage("发布完成");
-            } else if (res.data.data.state == "error") {
-              //这里可以设置progress为错误样式
-              clearInterval(this.timer);
-              UiUtils.errorMessage(res.data.data.stateInfo);
-              this.isLoading = false;
-              this.progressVisible = false;
-            } else {
-              //加载状态
-              this.percent = res.data.data.progress;
-            }
-          })
-          .catch(err => {
-            clearInterval(this.timer);
-            // UiUtils.errorMessage("error");
-            console.log(err);
-            this.isLoading = false;
-            this.progressVisible = false;
-          })
-          .finally(() => {
-            count++;
-          });
-      }, 250);
-    },
+    //设置结构失效
     structuralFailure() {
-      //勾选被选中的数据的 structureSign 标识
-      //这里应该遍历缓存data的数据 而不是当前页面tableConfig.dataSource的数据
-      Object.keys(this.data).forEach(p => {
-        if (this.isChecked[this.data[p].sheetId]) {
-          this.$set(
-              this.data[p],
-              "structureSign",
-              "true"
-            );
-            //如果结构失效 公式也要一起失效
-          this.$set(
-              this.data[p],
-              "formulaSign",
-              "true"
-            );
+      this.structuralFailureVisible = false;
+      DsUtils.post(`${api.markInvalid}`, this.getParam("structural")).then(
+        res => {
+          if (res.data.success) {
+            UiUtils.successMessage(res.data.data);
+            this.search(0); //更新数据
+          }
         }
-      })
-
-      //如果全选了
-      if (this.isAllChecked) {
-        this.isAllStructuralFailure = false
-        this.isAllFormulaFailure = false
-      }
+      );
     },
-    cancelStructuralFailure() {
-      Object.keys(this.data).forEach(p => {
-        if (this.isChecked[this.data[p].sheetId]) {
-          this.$set(
-              this.data[p],
-              "structureSign",
-              "false"
-            );
-        }
-      })
-
-      if (this.isAllChecked) {
-        this.isAllStructuralFailure = true
-      }
-    },
+    //设置公式失效
     formulaFailure() {
-      Object.keys(this.data).forEach(p => {
-        if (this.isChecked[this.data[p].sheetId]) {
-          this.$set(
-              this.data[p],
-              "formulaSign",
-              "true"
-            );
+      this.formulaFailureVisible = false;
+      DsUtils.post(`${api.markInvalid}`, this.getParam("formula")).then(res => {
+        if (res.data.success) {
+          UiUtils.successMessage(res.data.data);
+          this.search(0); //更新数据
         }
-      })
-
-      if (this.isAllChecked) {
-        this.isAllFormulaFailure = false
-      }
+      });
     },
-    cancelFormulaFailure() {
-      Object.keys(this.data).forEach(p => {
-        if (this.isChecked[this.data[p].sheetId]) {
-          this.$set(
-              this.data[p],
-              "formulaSign",
-              "false"
-          );
-          //如果公式不再失效 结构也不再失效
-          this.$set(
-              this.data[p],
-              "structureSign",
-              "false"
-          );
-        }
-      })
-
-      if (this.isAllChecked) {
-        this.isAllFormulaFailure = true
-        this.isAllStructuralFailure = true
-      }
-    },
+    //设置删除
     deleteOperation() {
-      Object.keys(this.data).forEach(p => {
-        if (this.isChecked[this.data[p].sheetId]) {
-          this.$set(this.data[p], "deleteSign", "true");
+      this.deleteOperationVisible = false;
+      DsUtils.post(`${api.markInvalid}`, this.getParam("delete")).then(res => {
+        if (res.data.success) {
+          UiUtils.successMessage(res.data.data);
+          this.search(0); //更新数据
         }
-      })
-
-      if (this.isAllChecked) {
-        this.isAllDeleteOperation = true
-      }
-    },
-    cancelDeleteOperation() {
-      Object.keys(this.data).forEach(p => {
-        if (this.isChecked[this.data[p].sheetId]) {
-          this.$set(this.data[p], "deleteSign", "false");
-        }
-      })
-
-      if (this.isAllChecked) {
-        this.isAllDeleteOperation = false
-      }
+      });
     },
     //选择数据的chechkbox
     onChangeColumnsCheckbox(e, record) {
       //如果全选时取消这条数据
       if (!e && this.isAllChecked) {
         //记录
-        this.falseList.push(record.sheetId) 
+        this.falseList.push(record.sheetId);
       }
       //如果全选时取消后,再次勾选这条数据
-      if (e && this.isAllChecked && this.falseList.indexOf(record.sheetId) != -1) {
+      if (
+        e &&
+        this.isAllChecked &&
+        this.falseList.indexOf(record.sheetId) != -1
+      ) {
         //删除记录
-        this.falseList.splice(this.falseList.indexOf(record.sheetId),1)
+        this.falseList.splice(this.falseList.indexOf(record.sheetId), 1);
       }
       // console.log(this.falseList);
     },
@@ -985,6 +721,8 @@ export default {
     },
     //创建数据控制checkbox
     createIsChecked() {
+      //每次调用search都会执行这个函数
+      //根据当前页内容tableConfig.dataSource更新isChecked
       this.tableConfig.dataSource.forEach(p => {
         // 如果没有这条数据的checkbox状态记录 则创建
         if (Object.keys(this.isChecked).indexOf(p.sheetId) == -1) {
@@ -1018,12 +756,11 @@ export default {
         }
 
         //重新全选全部内容,清空falseList
-        this.falseList = []
+        this.falseList = [];
       } else {
         for (let key in this.isChecked) {
           this.isChecked[key] = false;
         }
-
       }
     },
     setPageSize() {
@@ -1037,6 +774,21 @@ export default {
           this.tableConfig.pagination.pageSize
         );
       }
+    },
+    //统计选择了多少实例
+    getCheckedNum() {
+      let num = 0;
+      Object.keys(this.data).forEach(p => {
+        if (this.isChecked[this.data[p].sheetId]) {
+          num++;
+        }
+      });
+
+      if (num == 0) {
+        UiUtils.errorMessage("未选择实例");
+      }
+
+      return num;
     },
     //搜索表单
     onSearchForm() {
@@ -1110,18 +862,9 @@ export default {
       Object.keys(this.isChecked).forEach(p => {
         this.isChecked[p] = false;
       });
-      this.isAllStructuralFailure = ""
-      this.isAllFormulaFailure = ""
-      this.isAllDeleteOperation = ""
-    },
-    getProgress() {
-      setInterval(() => {
-        if (this.percent < 100) {
-          this.percent += 1;
-        } else {
-          this.percent = 0;
-        }
-      }, 100);
+      // this.isAllStructuralFailure = "";
+      // this.isAllFormulaFailure = "";
+      // this.isAllDeleteOperation = "";
     },
     //在返回数据后 需要做的一些操作
     init() {
@@ -1132,8 +875,6 @@ export default {
   },
   mounted() {
     this.search(1);
-
-    console.log("=======",""===false);
   }
 };
 </script>
@@ -1186,7 +927,8 @@ export default {
 .display {
   margin-top: 20px;
   position: relative;
-  height: 500px;
+  /* height: 500px; */
+  height: 200px;
   flex: 1;
 }
 
@@ -1271,5 +1013,13 @@ span {
 .slide-up-enter,
 .slide-up-appear {
   animation-duration: 0s;
+}
+
+.ant-table-pagination{
+  margin-right: 20px !important;
+}
+
+.showFormResultModal .ant-modal-body{
+  height: 700px;
 }
 </style>
