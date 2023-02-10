@@ -18,7 +18,6 @@
           <div class="input">
             <span class="searchLabel">筛选维:</span>
             <yn-input v-model="filterDimension">
-              <!-- <yn-icon-svg slot="suffix" type="search" /> -->
             </yn-input>
           </div>
           <div>
@@ -51,34 +50,33 @@
           >
         </div>
         <div class="operation">
-          <!-- <yn-button type="primary" @click="cacheVisible = true"
-            >构建缓存</yn-button
-          > -->
           <yn-button type="primary" @click="differencesVisible = true"
             >检测差异</yn-button
           >
+          <yn-divider type="vertical" style="height:32px;"/>
           <yn-button type="primary" @click="releaseVisible = true"
             >发布</yn-button
           >
+          <yn-button type="primary" @click="computeVisible = true"
+            >计算</yn-button
+          >
+          <yn-button type="primary" @click="releaseandComputeVisible = true"
+            >发布并计算</yn-button
+          >
+          <yn-divider type="vertical" style="height:32px;"/>
           <yn-button type="primary" @click="structuralFailureVisible = true"
             >结构失效</yn-button
           >
-          <!-- <yn-button type="primary" @click="cancelStructuralFailure"
-            >取消结构失效</yn-button
-          > -->
+          <yn-button type="primary" @click="downstreamFailureVisible = true"
+            >结构及下游公式失效</yn-button
+          >
           <yn-button type="primary" @click="formulaFailureVisible = true"
             >公式失效</yn-button
           >
-          <!-- <yn-button type="primary" @click="cancelFormulaFailure"
-            >取消公式失效</yn-button
-          > -->
+          <yn-divider type="vertical" style="height:32px;"/>
           <yn-button type="primary" @click="deleteOperationVisible = true"
             >删除</yn-button
           >
-          <!-- <yn-button type="primary" @click="cancelDeleteOperation"
-            >取消删除</yn-button
-          > -->
-          <!-- <yn-button type="primary" @click="test">TEST</yn-button> -->
         </div>
         <div class="display" ref="displayRef">
           <!-- 标题checkbox 是覆盖在pagelist上的 -->
@@ -140,17 +138,23 @@
             </yn-list-item>
           </yn-list>
         </yn-modal>
-        <!-- <yn-modal v-model="cacheVisible" @ok="buildCache">
-          <p>确定要构建缓存吗?</p>
-        </yn-modal> -->
         <yn-modal v-model="differencesVisible" @ok="detectDifferences">
           <p>确定要检测差异吗?</p>
         </yn-modal>
         <yn-modal v-model="releaseVisible" @ok="release">
           <p>确定要发布吗?</p>
         </yn-modal>
+        <yn-modal v-model="computeVisible" @ok="compute">
+          <p>确定要计算吗?</p>
+        </yn-modal>
+        <yn-modal v-model="releaseandComputeVisible" @ok="releaseandCompute">
+          <p>确定要发布并计算吗?</p>
+        </yn-modal>
         <yn-modal v-model="structuralFailureVisible" @ok="structuralFailure">
           <p>确定要将选择的实例置为结构失效吗?</p>
+        </yn-modal>
+        <yn-modal v-model="downstreamFailureVisible" @ok="downstreamFailure">
+          <p>确定要将选择的实例以及下游表单置为结构失效吗?</p>
         </yn-modal>
         <yn-modal v-model="formulaFailureVisible" @ok="formulaFailure">
           <p>确定要将选择的实例置为公式失效吗?</p>
@@ -159,7 +163,7 @@
           <p>确定要删除选择的实例吗?</p>
         </yn-modal>
 
-        <yn-modal title="进度" v-model="progressVisible" >
+        <yn-modal title="进度" v-model="progressVisible">
           <div class="progress">
             <yn-progress type="line" :percent="percent" status="active" />
           </div>
@@ -167,14 +171,81 @@
             <div></div>
           </template>
         </yn-modal>
-        <yn-modal v-model="showFormResultVisible" @ok="" class="showFormResultModal" :width="1200">
-          <p>检测差异完成!</p>
-          <p v-for="(p,index) in detectDifferencesResult" :key="index">{{ p }}</p>
+        <yn-modal
+          v-model="showFormResultVisible"
+          @ok=""
+          class="showFormResultModal"
+          :width="1300"
+        >
+          <yn-table
+            :columns="detectDifferencesResultColumns"
+            :dataSource="detectDifferencesResultTable"
+            :scroll="{ x: '100%', y: 500 }"
+            bordered
+          >
+            <div
+              slot="table.copyIcon"
+              class="copyIcon"
+              slot-scope="text, record"
+              @click="copyResult(text, record)"
+            >
+              <svg
+                t="1675736796788"
+                class="icon "
+                viewBox="0 0 1024 1024"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                p-id="2725"
+                width="200"
+                height="200"
+              >
+                <path
+                  d="M720 192h-544A80.096 80.096 0 0 0 96 272v608C96 924.128 131.904 960 176 960h544c44.128 0 80-35.872 80-80v-608C800 227.904 764.128 192 720 192z m16 688c0 8.8-7.2 16-16 16h-544a16 16 0 0 1-16-16v-608a16 16 0 0 1 16-16h544a16 16 0 0 1 16 16v608z"
+                  p-id="2726"
+                ></path>
+                <path
+                  d="M848 64h-544a32 32 0 0 0 0 64h544a16 16 0 0 1 16 16v608a32 32 0 1 0 64 0v-608C928 99.904 892.128 64 848 64z"
+                  p-id="2727"
+                ></path>
+                <path
+                  d="M608 360H288a32 32 0 0 0 0 64h320a32 32 0 1 0 0-64zM608 520H288a32 32 0 1 0 0 64h320a32 32 0 1 0 0-64zM480 678.656H288a32 32 0 1 0 0 64h192a32 32 0 1 0 0-64z"
+                  p-id="2728"
+                ></path>
+              </svg>
+            </div>
+          </yn-table>
           <template slot="footer">
-            <yn-button @click="showFormResultVisible = false" type="primary">确定</yn-button>
+            <yn-button @click="copyAllResult" type="primary"
+              >复制全部信息</yn-button
+            >
+            <yn-button @click="showFormResultVisible = false" type="primary"
+              >确定</yn-button
+            >
           </template>
         </yn-modal>
-      </div> 
+        <yn-modal
+          v-model="showReleaseResultVisible"
+          @ok=""
+          class="showReleaseResultModal"
+          :width="1300"
+        >
+          <p>公式预编译错误!</p>
+          <yn-divider />
+          正式版本
+          <p v-for="(p,index) in releaseErrorFormulas" :key="p.formId">{{ index+1 }}、formId：{{ p.formId }}，formName：{{ p.formName }}，错误信息：{{ p.message }}</p>
+          <yn-divider />
+          草稿版本
+          <p v-for="(p,index) in preReleaseErrorFormulas" :key="'pre-'+p.formId">{{ index+1 }}、formId：{{ p.formId }}，formName：{{ p.formName }}，错误信息：{{ p.message }}</p>
+          <template slot="footer">
+            <!-- <yn-button @click="copyAllResult" type="primary"
+              >复制全部信息</yn-button
+            > -->
+            <yn-button @click="showReleaseResultVisible = false" type="primary"
+              >确定</yn-button
+            >
+          </template>
+        </yn-modal>
+      </div>
     </yn-spin>
   </div>
 </template>
@@ -190,6 +261,51 @@ import { set } from "vue";
 export default {
   name: "preciseRelease",
   data() {
+    const customRender1 = (value, row, index) => {
+      const obj = {
+        children: value,
+        attrs: {}
+      };
+      if (row.detectDifferencesSuccess == false) {
+        obj.attrs.colSpan = 8;
+        obj.children = row.errorDetailMessage;
+      }
+      return obj;
+    };
+
+    const customRender2 = (value, row, index) => {
+      const obj = {
+        children: value,
+        attrs: {}
+      };
+      if (row.detectDifferencesSuccess == false) {
+        obj.attrs.colSpan = 0;
+      }
+      return obj;
+    };
+
+    const customRenderIndex = (value, row, index) => {
+      const obj = {
+        children: value,
+        attrs: {}
+      };
+      if (row.key == 0) {
+        obj.attrs.colSpan = 2;
+      }
+      return obj;
+    };
+
+    const customRenderName = (value, row, index) => {
+      const obj = {
+        children: value,
+        attrs: {}
+      };
+      if (row.key == 0) {
+        obj.attrs.colSpan = 0;
+      }
+      return obj;
+    };
+
     return {
       formName: "",
       filterDimension: "",
@@ -257,11 +373,11 @@ export default {
         dataSource: [],
         pagination: {
           current: 1,
-          pageSize: 15, //这里会被init中的setPageSize修改
+          pageSize: 12, //这里会被init中的setPageSize修改
           showQuickJumper: true,
-          total: 12
-          // pageSizeOptions: ["5", "10", "15", "20", "30", "40", "50", "100"],
-          // showSizeChanger: true
+          total: 12,
+          pageSizeOptions: ["10", "12", "15", "20", "30", "40", "50", "100"],
+          showSizeChanger: true
         },
         loading: false
         // scroll:{ y: 400 }
@@ -299,24 +415,124 @@ export default {
       progressVisible: false,
       timer: null,
       falseList: [], //记录全选状态下,取消的数据
-
       //是否进行了全选并修改标识
       // isAllStructuralFailure: "",
       // isAllFormulaFailure: "",
       // isAllDeleteOperation: "",
-
       structuralFailureVisible: false,
+      downstreamFailureVisible: false,
       formulaFailureVisible: false,
       deleteOperationVisible: false,
       showFormResultVisible: false,
+      computeVisible:false,
+      releaseandComputeVisible:false,
+      detectDifferencesResult: {}, //检测差异后的详细信息
 
-      detectDifferencesResult:[],
+      detectDifferencesResultColumns: [
+        //序号/汇总
+        {
+          title: "序号",
+          dataIndex: "index",
+          key: "index",
+          customRender: customRenderIndex,
+          width: "5%"
+        },
+        //表单名/汇总
+        {
+          title: "表单/Form",
+          dataIndex: "name",
+          key: "name",
+          customRender: customRenderName,
+          width: "18%"
+        },
+        {
+          title: "检测前合计",
+          dataIndex: "beforeDetectTotalSheetCount",
+          key: "beforeDetectTotalSheetCount",
+          customRender: customRender1,
+          width: "7%"
+        },
+        {
+          title: "检测后新增",
+          dataIndex: "afterDetectAddSheetCount",
+          key: "afterDetectAddSheetCount",
+          customRender: customRender2,
+          width: "7%"
+        },
+        {
+          title: "删除",
+          dataIndex: "afterDetectDelSheetCount",
+          key: "afterDetectDelSheetCount",
+          customRender: customRender2,
+          width: "7%"
+        },
+        {
+          title: "变化",
+          dataIndex: "afterDetectChangeSheetCount",
+          key: "afterDetectChangeSheetCount",
+          customRender: customRender2,
+          width: "7%"
+        },
+        {
+          title: "无变化",
+          dataIndex: "afterDetectNoChangeSheetCount",
+          key: "afterDetectNoChangeSheetCount",
+          customRender: customRender2,
+          width: "7%"
+        },
+        {
+          title: "影响表单",
+          dataIndex: "affectRelyFormCount",
+          key: "affectRelyFormCount",
+          customRender: customRender2,
+          width: "7%"
+        },
+        {
+          title: "影响实例",
+          dataIndex: "affectRelySheetCount",
+          key: "affectRelySheetCount",
+          customRender: customRender2,
+          width: "7%"
+        },
+        {
+          title: "累计用时(ms)",
+          dataIndex: "costTime",
+          key: "costTime",
+          customRender: customRender2,
+          width: "9%"
+        },
+        {
+          title: "完成时间",
+          dataIndex: "finishTime",
+          key: "finishTime",
+          // customRender: customRender2,
+          width: "15%"
+        },
+        {
+          title: "复制",
+          dataIndex: "copy",
+          key: "copy",
+          width: 60,
+          scopedSlots: {
+            customRender: "copyIcon"
+          },
+          align: "center",
+          width: "4%"
+        }
+      ],
+      detectDifferencesResultTable: [], //检测差异后的详细信息(table)
+
+
+
+      showReleaseResultVisible: false,
+      releaseErrorFormulas: [],//预编译错误的表单(正式)
+      preReleaseErrorFormulas:[],//(草稿)
     };
   },
   computed: {},
   methods: {
     search(flag) {
-      //flag 0:跳页/标记失效 1:查询 2:检测或发布后调用
+      //flag 0:跳页/切换每页条数/标记失效 1:查询 2:检测或发布后调用
       this.tableConfig.loading = true;
       //search 默认请求第一页
       let arr = [];
@@ -433,7 +649,7 @@ export default {
         });
     },
     getProgress(id, value) {
-      console.log(id, value);
+      // console.log(id, value);
       let count = 1;
       this.timer = setInterval(() => {
         // console.log(`轮询${count}`);
@@ -451,81 +667,25 @@ export default {
                 UiUtils.successMessage("发布完成");
               } else if (value == "detect") {
                 UiUtils.successMessage("检测差异完成");
-                this.showFormResultVisible = true 
-
-                this.detectDifferencesResult = [
-                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                  "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
-                  "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
-                  "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333",
-                ]
-                
-              }
+                this.showDetectDifferencesResultData(id);
+              } else if (value == "releaseandCompute") {
+                UiUtils.successMessage("发布并计算完成");
+              } else if (value == "compute") {
+                UiUtils.successMessage("计算完成");
+              } 
             } else if (res.data.data.state == "error") {
               //这里可以设置progress为错误样式
               clearInterval(this.timer);
               UiUtils.errorMessage(res.data.data.stateInfo);
               this.isLoading = false;
               this.progressVisible = false;
-              if (value == "detect") {
-                this.showFormResultVisible = true 
-
-
-
+              if (value == "release" && res.data.data.errorDetail) {
+                //如果是release且有errorDetail字段,则发生预编译错误
+                let data = JSON.parse(res.data.data.errorDetail)
+                console.log(data);
+                this.showReleaseErrorData(data)//展示发布预编译错误信息
+              }else if (value == "detect") {
+                this.showDetectDifferencesResultData(id);
               }
             } else {
               //加载状态
@@ -563,6 +723,15 @@ export default {
         obj = {
           ...obj,
           publishInvalid: false,
+          publishRelyFormulaInvalid: true,
+          formulaInvalid: true,
+          deletedInvalid: false
+        };
+      } else if (value == "publishRelyFormula") {
+        obj = {
+          ...obj,
+          publishInvalid: true,
+          publishRelyFormulaInvalid: false,
           formulaInvalid: true,
           deletedInvalid: false
         };
@@ -570,6 +739,7 @@ export default {
         obj = {
           ...obj,
           publishInvalid: true,
+          publishRelyFormulaInvalid: true,
           formulaInvalid: false,
           deletedInvalid: false
         };
@@ -577,10 +747,22 @@ export default {
         obj = {
           ...obj,
           publishInvalid: true,
+          publishRelyFormulaInvalid: true,
           formulaInvalid: true,
           deletedInvalid: true
         };
+      } else if (value == "releaseandCompute") {
+        obj = {
+          ...obj,
+          calc:true
+        }
+      } else if (value == "release") {
+        obj = {
+          ...obj,
+          calc:false
+        }
       }
+
 
       if (!this.isAllChecked) {
         for (let key in this.data) {
@@ -613,11 +795,15 @@ export default {
       this.differencesVisible = false;
       this.isLoading = true;
 
+      this.detectDifferencesResult = {};
+      this.detectDifferencesResultTable = [];
+      //检测差异时,清除上次结果
+
       this.progressVisible = true;
       this.percent = 0;
       DsUtils.post(`${api.detectDifferences}`, this.getParam("detect"))
         .then(res => {
-          console.log(res);
+          // console.log(res);
           if (res.data.success) {
             this.getProgress(res.data.data, "detect");
             // this.detectDifferencesProgress(res.data.data);
@@ -634,16 +820,17 @@ export default {
         });
     },
     //发布
-    release() {
+    release(flag) {
       this.releaseVisible = false;
       this.isLoading = true;
+      flag = flag=="releaseandCompute"?"releaseandCompute":"release"
 
       this.progressVisible = true;
       this.percent = 0;
-      DsUtils.post(`${api.accuratePublish}`, this.getParam("release"))
+      DsUtils.post(`${api.accuratePublish}`, this.getParam(flag))
         .then(res => {
           if (res.data.success) {
-            this.getProgress(res.data.data, "release");
+            this.getProgress(res.data.data, flag);
             // this.releaseProgress(res.data.data);
           } else {
             UiUtils.errorMessage(res.data.message);
@@ -657,6 +844,30 @@ export default {
           this.progressVisible = false;
         });
     },
+    //计算
+    async compute() {
+      this.computeVisible = false
+      this.isLoading = true;
+
+      // this.progressVisible = true;
+      this.percent = 0;
+      let res = await api.accuratePublishCalc(this.getParam("compute"))
+      if (res.data.success) {
+        this.isLoading = false
+        UiUtils.successMessage("计算成功");
+        // this.getProgress(res.data.data, "compute");
+      }
+      else {
+        UiUtils.errorMessage(res.data.message);
+        this.isLoading = false;
+        // this.progressVisible = false;
+      }
+    },
+    //发布并计算
+    releaseandCompute() {
+      this.releaseandComputeVisible = false
+      this.release("releaseandCompute")
+    },
     //设置结构失效
     structuralFailure() {
       this.structuralFailureVisible = false;
@@ -668,6 +879,19 @@ export default {
           }
         }
       );
+    },
+    //设置结构及下游表单失效
+    downstreamFailure() {
+      this.downstreamFailureVisible = false;
+      DsUtils.post(
+        `${api.markInvalid}`,
+        this.getParam("publishRelyFormula")
+      ).then(res => {
+        if (res.data.success) {
+          UiUtils.successMessage(res.data.data);
+          this.search(0); //更新数据
+        }
+      });
     },
     //设置公式失效
     formulaFailure() {
@@ -866,6 +1090,170 @@ export default {
       // this.isAllFormulaFailure = "";
       // this.isAllDeleteOperation = "";
     },
+    //检测差异完成后,请求详细信息
+    showDetectDifferencesResultData(id) {
+      //发送请求
+      DsUtils.get(`${api.detectDifferencesDetail}?linkId=${id}`)
+        .then(res => {
+          if (res.data.success) {
+            this.detectDifferencesResult = res.data.data;
+            //记得检测前清空上次结果
+            this.setDetectDifferencesResultTable(res.data.data);
+          } else {
+            UiUtils.errorMessage(res.data.message);
+          }
+        })
+        .catch(err => {
+          UiUtils.errorMessage("");
+          console.log(err);
+        });
+
+      this.showFormResultVisible = true;
+    },
+    //检测差异完成后,请求详细信息(table展示)
+    setDetectDifferencesResultTable(data) {
+      this.detectDifferencesResultTable = [];
+      // console.log(data);
+      //汇总
+      this.detectDifferencesResultTable.push({
+        key: 0,
+        index: `共${data.totalFormCount}张表单，累计数据：`,
+        name: ``,
+        beforeDetectTotalSheetCount: data.totalSheetCount || 0,
+        afterDetectAddSheetCount: data.totalAddSheetCount || 0,
+        afterDetectDelSheetCount: data.totalDelSheetCount || 0,
+        afterDetectChangeSheetCount: data.totalChangeCount || 0,
+        afterDetectNoChangeSheetCount: data.totalNoChangeCount || 0,
+        affectRelyFormCount: data.affectRelyFormCount || 0,
+        affectRelySheetCount: data.affectRelySheetCount || 0,
+        costTime: data.totalCostTime,
+        finishTime: data.finishTime,
+        errorDetailMessage: "",
+        detectDifferencesSuccess: true,
+        copy: "",
+        totalFormCount: data.totalFormCount
+      });
+
+      data.detailDTOList.forEach((p, index) => {
+        this.detectDifferencesResultTable.push({
+          key: index + 1,
+          index: index + 1,
+          name: p.bookName,
+          beforeDetectTotalSheetCount: p.beforeDetectTotalSheetCount || 0,
+          afterDetectAddSheetCount: p.afterDetectAddSheetCount || 0,
+          afterDetectDelSheetCount: p.afterDetectDelSheetCount || 0,
+          afterDetectChangeSheetCount: p.afterDetectChangeSheetCount || 0,
+          afterDetectNoChangeSheetCount: p.afterDetectNoChangeSheetCount || 0,
+          affectRelyFormCount: p.affectRelyFormCount || 0,
+          affectRelySheetCount: p.affectRelySheetCount || 0,
+          costTime: p.costTime,
+          finishTime: p.finishTime,
+          errorDetailMessage: "出现错误:" + p.errorDetailMessage,
+          detectDifferencesSuccess: p.detectDifferencesSuccess,
+          copy: ""
+        });
+      });
+    },
+    //复制单条
+    copyResult(text, detectDifferencesResult) {
+      let str = ``;
+      // console.log(detectDifferencesResult);
+
+      if (detectDifferencesResult.key == 0) {
+        str = `汇总信息：总计${detectDifferencesResult.totalFormCount ||
+          0}张表单/Form，表格/Sheet情况：检测前合计${detectDifferencesResult.beforeDetectTotalSheetCount ||
+          0}张，检测后新增${detectDifferencesResult.afterDetectAddSheetCount ||
+          0}张，删除${detectDifferencesResult.afterDetectDelSheetCount ||
+          0}张，变化${detectDifferencesResult.afterDetectChangeSheetCount ||
+          0}张，无变化${detectDifferencesResult.afterDetectNoChangeSheetCount ||
+          0}张，影响后续${detectDifferencesResult.affectRelyFormCount ||
+          0}张表单/Form，${detectDifferencesResult.affectRelySheetCount ||
+          0}张表格/Sheet。累计用时:${
+          detectDifferencesResult.costTime
+        } ms，完成时间:${detectDifferencesResult.finishTime}`;
+      } else if (detectDifferencesResult.detectDifferencesSuccess) {
+        str = `表单/Form：${
+          detectDifferencesResult.name
+        }，表格/Sheet情况：检测前合计${detectDifferencesResult.beforeDetectTotalSheetCount ||
+          0}张，检测后新增${detectDifferencesResult.afterDetectAddSheetCount ||
+          0}张，删除${detectDifferencesResult.afterDetectDelSheetCount ||
+          0}张，变化${detectDifferencesResult.afterDetectChangeSheetCount ||
+          0}张，无变化${detectDifferencesResult.afterDetectNoChangeSheetCount ||
+          0}张，影响后续${detectDifferencesResult.affectRelyFormCount ||
+          0}张表单/Form，${detectDifferencesResult.affectRelySheetCount ||
+          0}张表格/Sheet。累计用时：${
+          detectDifferencesResult.costTime
+        } ms，完成时间：${detectDifferencesResult.finishTime}`;
+      } else {
+        str = `表单/Form：${detectDifferencesResult.name}，${detectDifferencesResult.errorDetailMessage}，完成时间：${detectDifferencesResult.finishTime}`;
+      }
+
+      const textArea = document.createElement("textArea");
+      textArea.value = str;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      UiUtils.successMessage("已复制信息");
+    },
+    //复制全部
+    copyAllResult() {
+      let str = ``;
+      console.log(this.detectDifferencesResultTable);
+      this.detectDifferencesResultTable.forEach(p => {
+        if (p.key == 0) {
+          str += `汇总信息：总计${p.totalFormCount ||
+            0}张表单/Form，表格/Sheet情况：检测前合计${p.beforeDetectTotalSheetCount ||
+            0}张，检测后新增${p.afterDetectAddSheetCount ||
+            0}张，删除${p.afterDetectDelSheetCount ||
+            0}张，变化${p.afterDetectChangeSheetCount ||
+            0}张，无变化${p.afterDetectNoChangeSheetCount ||
+            0}张，影响后续${p.affectRelyFormCount ||
+            0}张表单/Form，${p.affectRelySheetCount ||
+            0}张表格/Sheet。累计用时:${p.costTime} ms，完成时间:${
+            p.finishTime
+          }`;
+        } else if (p.detectDifferencesSuccess) {
+          str += `\n${p.index}、表单/Form：${
+            p.name
+          }，表格/Sheet情况：检测前合计${p.beforeDetectTotalSheetCount ||
+            0}张，检测后新增${p.afterDetectAddSheetCount ||
+            0}张，删除${p.afterDetectDelSheetCount ||
+            0}张，变化${p.afterDetectChangeSheetCount ||
+            0}张，无变化${p.afterDetectNoChangeSheetCount ||
+            0}张，影响后续${p.affectRelyFormCount ||
+            0}张表单/Form，${p.affectRelySheetCount ||
+            0}张表格/Sheet。累计用时：${p.costTime} ms，完成时间：${
+            p.finishTime
+          }`;
+        } else {
+          str += `\n${p.index}、表单/Form：${p.name}，${p.errorDetailMessage}，完成时间：${p.finishTime}`;
+        }
+      });
+
+      const textArea = document.createElement("textArea");
+      textArea.value = str;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      UiUtils.successMessage("已复制全部信息");
+    },
+    showReleaseErrorData(data) {
+      this.showReleaseResultVisible = true
+      this.releaseErrorFormulas = []
+      this.preReleaseErrorFormulas = []
+
+      data.errorFormulas.forEach(p => {
+        if (p.isolationType == 1) {
+          this.preReleaseErrorFormulas.push(p)
+        }
+        else if (p.isolationType == 0) {
+          this.releaseErrorFormulas.push(p)
+        }
+      })
+      
+    },
     //在返回数据后 需要做的一些操作
     init() {
       this.createTitleCheckbox();
@@ -957,7 +1345,8 @@ span {
   z-index: 999;
 }
 
-.searchIcon {
+.searchIcon,
+.copyIcon {
   cursor: pointer;
   width: 22px;
   height: 22px;
@@ -969,6 +1358,10 @@ span {
 
 .searchIcon:hover {
   background-color: rgb(245, 247, 250);
+}
+
+.copyIcon:hover {
+  background-color: rgb(192, 205, 223);
 }
 
 .selectFormModal .ant-modal-body {
@@ -1015,11 +1408,19 @@ span {
   animation-duration: 0s;
 }
 
-.ant-table-pagination{
+.ant-table-pagination {
   margin-right: 20px !important;
 }
 
-.showFormResultModal .ant-modal-body{
-  height: 700px;
+.showFormResultModal .ant-modal-body,.showReleaseResultModal .ant-modal-body{
+  height: 600px;
+}
+
+.showFormResultModal .ant-modal-close-x,.showReleaseResultModal .ant-modal-close-x{
+  display: none;
+}
+
+.ant-divider-vertical{
+  margin-left:0px;
 }
 </style>
