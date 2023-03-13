@@ -1,45 +1,49 @@
 <template>
   <div id="app">
-
     <!-- <yn-spin :spinning="spinning" size="large"> -->
-      <yn-locale-provider :locale="getLocale()">
-        <preciseRelease />
-      </yn-locale-provider> 
+    <yn-locale-provider :locale="getLocale()">
+      <!-- <preciseRelease /> -->
+      <!-- <formGrouping /> -->
+      <!-- <trackingFormula /> -->
+      <router-view></router-view>
+    </yn-locale-provider>
     <!-- </yn-spin> -->
- 
-            <!-- <MainFrame /> -->
-        <!-- 默认页面 -->
-        <!-- <mydemo /> -->
-        <!-- handsontable功能演示 -->
-        <!-- <vueinTable /> -->
-        <!-- 组件式渲染器 -->
-        <!-- <virtualList /> -->
-        <!-- 虚拟列表demo -->
-        <!-- <newHandsontable /> -->
-        <!-- 使用new来实现表格的demo -->
-        <!-- <vueinTablebyNew /> -->
-        <!-- 尝试使用new来实现 组件式渲染器 -->
-        <!-- <hotDocumentation /> -->
-        <!-- 虚拟列表demo2 使用yn-handsontable实现 -->
-        <!-- <renderTest /> -->
-        <!-- 在ynhot中使用渲染器 -->
-        <!-- <debounceTest /> -->
-        <!-- 防抖test -->
-        <!-- <router-view></router-view> -->
-        <!-- 路由页面 -->
+
+    <!-- <MainFrame /> -->
+    <!-- 默认页面 -->
+    <!-- <mydemo /> -->
+    <!-- handsontable功能演示 -->
+    <!-- <vueinTable /> -->
+    <!-- 组件式渲染器 -->
+    <!-- <virtualList /> -->
+    <!-- 虚拟列表demo -->
+    <!-- <newHandsontable /> -->
+    <!-- 使用new来实现表格的demo -->
+    <!-- <vueinTablebyNew /> -->
+    <!-- 尝试使用new来实现 组件式渲染器 -->
+    <!-- <hotDocumentation /> -->
+    <!-- 虚拟列表demo2 使用yn-handsontable实现 -->
+    <!-- <renderTest /> -->
+    <!-- 在ynhot中使用渲染器 -->
+    <!-- <debounceTest /> -->
+    <!-- 防抖test -->
+    <!-- <router-view></router-view> -->
+    <!-- 路由页面 -->
   </div>
 </template>
 
 <script>
+import trackingFormula from "@/views/trackingFormula/index";
+import formGrouping from "@/views/formGrouping/index";
 import preciseRelease from "@/views/preciseRelease/index";
-import debounceTest from "@/views/hotDocumentation/debounceTest";
-import renderTest from "@/views/hotDocumentation/renderTest";
-import hotDocumentation from "@/views/hotDocumentation/index";
-import newHandsontable from "@/views/newHandsontable/index";
-import vueinTable from "@/views/useVueinTable/index";
-import vueinTablebyNew from "@/views/useVueinTablebyNew/index";
-import mydemo from "@/views/mydemo/index";
-import virtualList from "@/views/virtualList/index";
+// import debounceTest from "@/views/hotDocumentation/debounceTest";
+// import renderTest from "@/views/hotDocumentation/renderTest";
+// import hotDocumentation from "@/views/hotDocumentation/index";
+// import newHandsontable from "@/views/newHandsontable/index";
+// import vueinTable from "@/views/useVueinTable/index";
+// import vueinTablebyNew from "@/views/useVueinTablebyNew/index";
+// import mydemo from "@/views/mydemo/index";
+// import virtualList from "@/views/virtualList/index";
 // import MainFrame from "@/views/platform/ui/MainFrame";
 import zh_CN from "yn-p1/libs/assets/platform/local/zh_CN";
 import en_US from "yn-p1/libs/assets/platform/local/en_US";
@@ -77,11 +81,7 @@ const LANGUAGE_MOMENT_MAP = {
 export default {
   name: "app",
   data() {
-
     return {
-
-
-      
       screenWidth: 0,
       spinning: false,
       localeCode: LOCALE_CODE
@@ -90,6 +90,9 @@ export default {
   beforeCreate() {
     let BASE_URL = BACKEND.BASE_URL;
     let { query } = this.$route;
+    // console.log("ROUTE", this.$route);
+    //从路由参数中获取基础配置?
+    //外部引入该页面时，该页面可以通过路由拿到token和appid
     let {
       TOKEN,
       lang,
@@ -106,15 +109,20 @@ export default {
       server: debugServer,
       ignore: debugIgnore
     } = query || {};
+    console.log("query",query); 
+    //基础配置
+    // console.log(TOKEN,decodeURI(TOKEN),decodeURI(decodeURI(TOKEN)),TOKEN && decodeURI(decodeURI(TOKEN)));
     TOKEN = TOKEN && decodeURI(decodeURI(TOKEN));
+    // TOKEN = "11edc192c8536d228350110921b0cae7";  
     lang = lang && decodeURI(decodeURI(lang));
     appId = appId && decodeURI(decodeURI(appId));
+    // appId = "c76ef194385e11eb9f43c90043244155"
     menuId = (menuId && decodeURI(decodeURI(menuId))) || "metadataMenu";
     inTab = (inTab && decodeURI(decodeURI(inTab))) || menuId;
     roleId = roleId && decodeURI(decodeURI(roleId));
     // serviceName = (serviceName && decodeURI(decodeURI(serviceName))) || "ecs";
-    serviceName = "",
-    securityFlag = securityFlag && decodeURI(decodeURI(securityFlag));
+    (serviceName = ""),
+      (securityFlag = securityFlag && decodeURI(decodeURI(securityFlag)));
     timeDelta = timeDelta && decodeURI(decodeURI(timeDelta));
     origin = origin && decodeURIComponent(origin);
     logoutTargetUrl = logoutTargetUrl && decodeURIComponent(logoutTargetUrl);
@@ -127,13 +135,17 @@ export default {
     let urlServiceName = serviceName;
     let EcsOrigin = BASE_URL || window.location.origin;
     DsUtilsCustom(DsUtils);
+    //拦截器
     DsUtils.addGlobalRequestInterceptor(
       config => {
         let { headers, url } = config || {};
         const { ServiceName, appId: selectAppId } = headers || {};
         headers.LoginToken = TOKEN;
-        headers.appId = selectAppId || appId;
+        // headers.appId = selectAppId || appId;
+        headers.appId = "c76ef194385e11eb9f43c90043244155" 
+        //写死appid 魔术表单需要的appid
         headers.MenuId = menuId;
+
         headers.ServiceName = ServiceName || serviceName;
         urlServiceName = ServiceName || serviceName;
         if (!url.match(/^(http|https)/)) {
@@ -166,6 +178,9 @@ export default {
           config.headers.stid = stid;
           config.headers.Timestamp = Timestamp;
         }
+
+        // config.headers['Content-Type'] = 'text/plain';
+
         return config;
       },
       err => DsUtils.axiosErrorHandler(err)
@@ -199,15 +214,17 @@ export default {
   },
   components: {
     // MainFrame,
-    mydemo,
-    vueinTable,
-    virtualList,
-    newHandsontable,
-    vueinTablebyNew,
-    hotDocumentation,
-    renderTest,
-    debounceTest,
-    preciseRelease
+    // mydemo,
+    // vueinTable,
+    // virtualList,
+    // newHandsontable,
+    // vueinTablebyNew,
+    // hotDocumentation,
+    // renderTest,
+    // debounceTest,
+    // preciseRelease,
+    // formGrouping,
+    // trackingFormula
   },
   created() {
     let language = APPS.LANGUAGE || LOCALE_CODE;
@@ -282,6 +299,4 @@ export default {
 #app > .ant-spin-nested-loading > div > .ant-spin-spinning {
   max-height: inherit;
 }
-
-
 </style>
