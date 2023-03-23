@@ -13,14 +13,6 @@
             </yn-select>
           </div>
           <div>
-            <span class="searchLabel">锁定:</span>
-            <yn-select style="width: 80px" v-model="lockSelect">
-              <yn-select-option value="failure">否</yn-select-option>
-              <yn-select-option value="noFailure">是</yn-select-option>
-              <yn-select-option value="all">全部</yn-select-option> 
-            </yn-select>
-          </div>
-          <div>
             <span class="searchLabel">结构:</span>
             <yn-select style="width: 80px" v-model="structureSelect">
               <yn-select-option value="failure">失效</yn-select-option>
@@ -52,6 +44,14 @@
               <yn-select-option value="all">全部</yn-select-option>
             </yn-select>
           </div>
+          <div>
+            <span class="searchLabel">锁定:</span>
+            <yn-select style="width: 80px" v-model="lockSelect">
+              <yn-select-option value="failure">否</yn-select-option>
+              <yn-select-option value="noFailure">是</yn-select-option>
+              <yn-select-option value="all">全部</yn-select-option> 
+            </yn-select>
+          </div> 
         </div>
         <div class="operation">
           <span>检测</span>
@@ -85,7 +85,7 @@
           >
           <yn-divider type="vertical" style="height:32px;" />
           <span>发布实例/Sheet</span>
-          <yn-button type="primary" @click="releaseVisible = true"
+          <yn-button type="primary" @click="releaseVisible = true" 
             >发布</yn-button
           >
           <yn-button type="primary" @click="computeVisible = true"
@@ -147,12 +147,14 @@
               </div>
             </template> -->
             <template slot="table.firstCol" slot-scope="text, record">
-              <div @click.stop>
-                <yn-checkbox
-                  @change="onChangeColumnsCheckbox($event, record)"
-                  v-model="isChecked[text]"
-                ></yn-checkbox>
-              </div>
+              <div style="display:flex;  justify-content: center;align-items: center;">
+                <div @click.stop style="height:16px;width:16px">
+                  <yn-checkbox 
+                    @change="onChangeColumnsCheckbox($event, record)"
+                    v-model="isChecked[text]"
+                  ></yn-checkbox>
+                </div> 
+              </div> 
             </template>
             <template slot="table.draftSign" slot-scope="text">
               <yn-tag color="white" v-if="text == true">正式版</yn-tag>
@@ -272,7 +274,7 @@
           <yn-table
             :columns="detectDifferencesResultColumns"
             :dataSource="detectDifferencesResultTable"
-            :scroll="{ x: '100%', y: 500 }"
+            class="detectDifferencesTable"
             bordered
           >
             <div
@@ -524,19 +526,20 @@ export default {
           {
             title: "表单名称",
             dataIndex: "bookName",
-            width: 363
+            width: 468
             // width: "32%"
           },
           {
             title: "筛选维",
             dataIndex: "dimension",
-            width: 363
+            width: 468 
             // width: "32%"
           },
           {
             title: "草稿/正式",
+            // title: "版本", 
             dataIndex: "draftSign",
-            width: 94,
+            width: 64,  
             // width: "10%",
             align: "center",
             fixed: "right",
@@ -546,8 +549,9 @@ export default {
           },
           {
             title: "精准检测",
+            // title: "检测",
             dataIndex: "accurateDetectionSign",
-            width: 90,
+            width: 60,
             // width: "10%",
             align: "center",
             fixed: "right",
@@ -557,8 +561,9 @@ export default {
           },
           {
             title: "是否锁定",
+            // title: "锁定",
             dataIndex: "lock", 
-            width: 90,
+            width: 60,
             // width: "10%",
             align: "center",
             fixed: "right",
@@ -568,8 +573,9 @@ export default {
           },
           {
             title: "结构失效",
+            // title: "结构",
             dataIndex: "structureSign",
-            width: 90,
+            width: 60,
             // width: "10%",
             align: "center",
             fixed: "right",
@@ -579,8 +585,9 @@ export default {
           },
           {
             title: "公式失效",
+            // title: "公式",
             dataIndex: "formulaSign",
-            width: 90,
+            width: 60,
             // width: "10%",
             align: "center",
             fixed: "right",
@@ -590,8 +597,9 @@ export default {
           },
           {
             title: "计算失效",
+            // title: "计算",
             dataIndex: "calculationSign",
-            width: 90,
+            width: 60,
             // width: "10%",
             align: "center",
             fixed: "right",
@@ -601,14 +609,15 @@ export default {
           },
           {
             title: "删除标识",
+            // title: "删除", 
             dataIndex: "deleteSign",
-            width: 90,
+            width: 60,        
             // width: "10%",
             align: "center",
             fixed: "right",
             scopedSlots: {
               customRender: "deleteSign"
-            }
+            } 
           }
         ],
         // rowSelection:{
@@ -711,70 +720,70 @@ export default {
           dataIndex: "name",
           key: "name",
           customRender: customRenderName,
-          width: "18%"
+          width: "16%"    
         },
         {
           title: "检测前合计",
           dataIndex: "beforeDetectTotalSheetCount",
           key: "beforeDetectTotalSheetCount",
           customRender: customRender1,
-          width: "7%"
+          width: "9%"
         },
         {
           title: "检测后新增",
           dataIndex: "afterDetectAddSheetCount",
           key: "afterDetectAddSheetCount",
           customRender: customRender2,
-          width: "7%"
+          width: "9%" 
         },
         {
           title: "删除",
           dataIndex: "afterDetectDelSheetCount",
           key: "afterDetectDelSheetCount",
           customRender: customRender2,
-          width: "7%"
+          width: "5%"
         },
         {
           title: "变化",
           dataIndex: "afterDetectChangeSheetCount",
           key: "afterDetectChangeSheetCount",
           customRender: customRender2,
-          width: "7%"
+          width: "5%"
         },
         {
           title: "无变化",
           dataIndex: "afterDetectNoChangeSheetCount",
           key: "afterDetectNoChangeSheetCount",
           customRender: customRender2,
-          width: "7%"
+          width: "7%" 
         },
         {
           title: "影响表单",
           dataIndex: "affectRelyFormCount",
           key: "affectRelyFormCount",
           customRender: customRender2,
-          width: "7%"
+          width: "8%" 
         },
         {
           title: "影响实例",
           dataIndex: "affectRelySheetCount",
           key: "affectRelySheetCount",
           customRender: customRender2,
-          width: "7%"
+          width: "8%"
         },
         {
-          title: "累计用时(ms)",
+          title: "用时(ms)",
           dataIndex: "costTime",
           key: "costTime",
           customRender: customRender2,
-          width: "9%"
+          width: "9%" 
         },
         {
           title: "完成时间",
           dataIndex: "finishTime",
           key: "finishTime",
           // customRender: customRender2,
-          width: "15%"
+          width: "14%" 
         },
         {
           title: "复制",
@@ -785,7 +794,7 @@ export default {
             customRender: "copyIcon"
           },
           align: "center",
-          width: "4%"
+          width: "5%" 
         }
       ],
       detectDifferencesResultTable: [], //检测差异后的详细信息(table)
@@ -845,8 +854,8 @@ export default {
       });
     },
     subSearch(arr, dim) {
-      console.log("search传递参数");
-      console.log(arr, dim); 
+      // console.log("search传递参数");
+      // console.log(arr, dim); 
       this.selectedForm = arr
       this.filterDimension = dim
       this.search(1) 
@@ -1047,6 +1056,7 @@ export default {
           this.tableConfig.loading = false;
         });
     },
+    //查询进度
     getProgress(id, value) {
       // console.log(id, value);
       let count = 1;
@@ -1054,7 +1064,7 @@ export default {
         // console.log(`轮询${count}`);
         DsUtils.get(`${api.getTaskState}?taskId=${id}`)
           .then(res => {
-            console.log(res);
+            // console.log(res);
             if (res.data.data.state == "finish") {
               clearInterval(this.timer);
               this.percent = 100;
@@ -1083,7 +1093,7 @@ export default {
               if (value == "release" && res.data.data.errorDetail) {
                 //如果是release且有errorDetail字段,则发生预编译错误
                 let data = JSON.parse(res.data.data.errorDetail);
-                console.log(data);
+                // console.log(data);
                 this.showReleaseErrorData(data); //展示发布预编译错误信息
               } else if (value == "detect") {
                 this.showDetectDifferencesResultData(id);
@@ -1329,14 +1339,14 @@ export default {
           let arr = []; //每轮的数据结果
           let count = 0; //定时器 计数
           let timer = setInterval(async () => {
-            console.log("================");
+            // console.log("================");
             count++;
             //第count次 查询所有表单的发布进度
             for (let id = 0; id < data.length; id++) {
               if (count == 1) {
                 //第一次,必定每个都要要请求,因此每条数据都push
                 let res2 = await api.getTaskState2(data[id].linkId);
-                console.log(`第${count}次,请求${data[id].bookName}`);
+                // console.log(`第${count}次,请求${data[id].bookName}`);
                 let data2 = res2.data.data;
                 arr.push({
                   key: data[id].bookId,
@@ -1351,7 +1361,7 @@ export default {
               ) {
                 //第2次及以后,如果任务还未完成,则splice
                 let res2 = await api.getTaskState2(data[id].linkId);
-                console.log(`第${count}次,请求${data[id].bookName}`);
+                // console.log(`第${count}次,请求${data[id].bookName}`);
                 let data2 = res2.data.data;
                 arr.splice(id, 1, {
                   key: data[id].bookId,
@@ -1407,23 +1417,23 @@ export default {
       this.computeVisible = false;
       this.isLoading = true;
 
-      // this.progressVisible = true;
+      this.progressVisible = true;
       this.percent = 0;
       try {
         let res = await api.accuratePublishCalc(this.getParam("compute"));
         if (res.data.success) {
-          this.isLoading = false;
-          UiUtils.successMessage("计算成功");
-          this.clearChecked();
-          this.search(2);
-          // this.getProgress(res.data.data, "compute");
+          // UiUtils.successMessage("计算成功"); 
+          // this.clearChecked();
+          // this.search(2);
+          this.getProgress(res.data.data, "compute");
         } else {
           UiUtils.errorMessage(res.data.message);
           this.isLoading = false;
-          // this.progressVisible = false;
+          this.progressVisible = false;
         }
       } catch (err) {
         this.isLoading = false;
+        this.progressVisible = false;
       }
     },
     //发布并计算
@@ -1434,7 +1444,7 @@ export default {
     //置反精准检测
     async accurateDetection() {
       this.accurateDetectionVisible = false;
-      console.log(this.getParam("accurateDetection"));
+      // console.log(this.getParam("accurateDetection"));
       let res = await api.accurateDetection(this.getParam("accurateDetection"));
       if (res.data.success) {
         UiUtils.successMessage(res.data.data);
@@ -1766,7 +1776,7 @@ export default {
     //复制全部
     copyAllResult() {
       let str = ``;
-      console.log(this.detectDifferencesResultTable);
+      // console.log(this.detectDifferencesResultTable);
       this.detectDifferencesResultTable.forEach(p => {
         if (p.key == 0) {
           str += `汇总信息：总计${p.totalFormCount ||
@@ -1895,11 +1905,22 @@ export default {
     }, 1000);
   },
   components: {
-    headerSearch
+    headerSearch,
   }
 };
 </script>
 <style scoped>
+.showFormResultModal ::v-deep .ant-modal-body{
+  /* padding-top:0px;  */ 
+}
+.detectDifferencesTable  ::v-deep thead{
+
+    position: sticky;
+    top: -24px;
+    z-index: 9999;    
+} 
+ 
+ 
 .menu-search-item:hover,
 .menu-search-filter-item:hover {
   background: #f0f4fe;

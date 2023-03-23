@@ -10,7 +10,7 @@
             placeholder="请输入表单名称"
             @change="onSearchForm('inputSearch')"
             @focus="onSearchForm"
-            style="width:400px;margin-left:0px;margin-right:20px;"
+            style="width:300px;margin-left:0px;margin-right:20px;"
           />
           <div v-show="showDropdown" class="menu-search-dropdown">
             <div>
@@ -29,7 +29,7 @@
                 {{ p.bookName }}
               </div>
             </div>
-            <yn-divider /> 
+            <yn-divider />
             <yn-pagination
               v-model="searchPage.current"
               showQuickJumper
@@ -42,6 +42,12 @@
           </div>
         </div>
       </div>
+      <yn-button
+        @click="formGroup" 
+        style="margin-right:20px;"
+        type="primary"
+        >按分组添加表单</yn-button
+      >  
       <div class="tfFilterDimension">
         <div style="width:80px">搜索筛选维:</div>
         <div class="menu-search-filter" ref="menuSearchFilter">
@@ -51,7 +57,7 @@
             placeholder="请输入筛选维名称"
             @change="onSearchDimension('inputSearch')"
             @focus="onSearchDimension"
-            style="width:400px;margin-left:0px;margin-right:20px;"
+            style="width:300px;margin-left:0px;margin-right:20px;"
           />
           <div
             v-show="showDimensionDropdown"
@@ -67,7 +73,7 @@
                 {{ p }}
               </div>
             </div>
-            <yn-divider /> 
+            <yn-divider />
             <yn-pagination
               v-model="DimensionPage.current"
               showQuickJumper
@@ -118,6 +124,15 @@
         >{{ p.bookName }}</yn-tag
       >
     </div>
+
+    <yn-modal
+      v-model="formGroupVisible"
+      width="1300"
+      class="selectGroup"
+      @ok="addFormGroup"
+    >
+      <selectGroup ref="selectGroup" />
+    </yn-modal>
   </div>
 </template>
 <script>
@@ -127,6 +142,7 @@ import "yn-p1/libs/components/yn-directory-tree/";
 import DsUtils from "yn-p1/libs/utils/DsUtils";
 import UiUtils from "yn-p1/libs/utils/UiUtils";
 import api from "../../../api/api";
+import selectGroup from "../selectGroup/index.vue";
 export default {
   name: "search",
   data() {
@@ -155,10 +171,60 @@ export default {
       dimensionName: "",
 
       isFormChecked: {}, //统计表单是否被选中
-      formChecked: [] //统计已选中的表单的信息
+      formChecked: [], //统计已选中的表单的信息
+      formGroupVisible: false
     };
   },
+  components: {
+    selectGroup
+  },
   methods: {
+    formGroup() { 
+      if (this.$refs.selectGroup) {
+        // this.$refs.selectGroup.createIsChecked() 
+        //没点开selectGroup是没有这个组件的,要点开一次后才有
+      }
+      this.formGroupVisible = true    
+    }, 
+    //添加 表单分组 中的表单
+    addFormGroup() {
+      this.formGroupVisible = false;
+
+      let data = this.$refs.selectGroup.isChecked;
+      let arr = []; //装需要push的表单
+
+      for (let i in data) {
+        if (data[i][0]) {
+          let flag = false;
+          this.formChecked.forEach(p => {
+            if (p.bookId == data[i][2]) {
+              flag = true;
+            }
+            //检查有没有这个表单
+          });
+          if (!flag) {
+            //没有则push 进formChecked
+            arr.push({
+              bookId: data[i][2],
+              bookName: data[i][1]
+            });
+            //并且设置isFormChecked
+            this.$set(this.isFormChecked,data[i][2],true) 
+          }
+        }
+      }
+
+      // 去重
+      let arr2 = []
+      let obj2 = {}
+      arr.forEach(p => {
+        if (!obj2[p.bookId]) {
+          arr2.push(p)
+          obj2[p.bookId] = true
+        }
+      }) 
+      this.formChecked.push(...arr2);
+    },
     search() {
       //传递选择表单筛选维参数
       //调用父组件的查询
@@ -228,7 +294,7 @@ export default {
         //搜索时跳到第一页
         this.searchPage.current = 1;
       }
- 
+
       DsUtils.get(
         `${api.getSearchForm}?formName=${this.formName}&pageNum=${this.searchPage.current}&pageSize=${this.searchPage.pageSize}`
       )
@@ -253,7 +319,7 @@ export default {
     onSelectForm(p) {
       //清空筛选维
       //   console.log("触发item");
-      
+
       this.$set(this.isFormChecked, p.bookId, !this.isFormChecked[p.bookId]);
       this.changeChecked(p);
     },
@@ -303,12 +369,12 @@ export default {
 };
 </script>
 
-<style scoped>  
-.ant-divider-horizontal{
-    margin: 0.25rem 0;
-}  
-.ant-pagination{
-    float: right; 
+<style scoped>
+.ant-divider-horizontal {
+  margin: 0.25rem 0;
+}
+.ant-pagination {
+  float: right;
 }
 .searchedTags {
   border-left: 20px solid white;
@@ -363,5 +429,9 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
   border-radius: 5px;
+}
+
+.selectGroup ::v-deep .ant-modal-body {
+  height: 600px;
 }
 </style>

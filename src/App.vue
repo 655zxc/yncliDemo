@@ -111,15 +111,13 @@ export default {
     } = query || {};
     console.log("query",query); 
     //基础配置
-    // console.log(TOKEN,decodeURI(TOKEN),decodeURI(decodeURI(TOKEN)),TOKEN && decodeURI(decodeURI(TOKEN)));
     TOKEN = TOKEN && decodeURI(decodeURI(TOKEN));
-    // TOKEN = "11edc192c8536d228350110921b0cae7";  
+    TOKEN = "11edc91a746964daa996691d61342159"             
     lang = lang && decodeURI(decodeURI(lang));
     appId = appId && decodeURI(decodeURI(appId));
-    // appId = "c76ef194385e11eb9f43c90043244155"
     menuId = (menuId && decodeURI(decodeURI(menuId))) || "metadataMenu";
     inTab = (inTab && decodeURI(decodeURI(inTab))) || menuId;
-    roleId = roleId && decodeURI(decodeURI(roleId));
+    roleId = roleId && decodeURI(decodeURI(roleId)); 
     // serviceName = (serviceName && decodeURI(decodeURI(serviceName))) || "ecs";
     (serviceName = ""),
       (securityFlag = securityFlag && decodeURI(decodeURI(securityFlag)));
@@ -140,7 +138,7 @@ export default {
       config => {
         let { headers, url } = config || {};
         const { ServiceName, appId: selectAppId } = headers || {};
-        headers.LoginToken = TOKEN;
+        headers.LoginToken = TOKEN; 
         // headers.appId = selectAppId || appId;
         headers.appId = "c76ef194385e11eb9f43c90043244155" 
         //写死appid 魔术表单需要的appid

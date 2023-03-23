@@ -660,7 +660,8 @@ export default {
         targetId: this.selectNodeKey,
         pageNum,
         pageSize,
-        searchByFormName: this.inputSearchForm
+        searchByFormName: this.inputSearchForm,
+        pageFlag:true
         //this.inputSearchForm只有在修改input内容 以及切换节点时会更改
       });
       res = res.data.data;
@@ -1012,6 +1013,7 @@ export default {
     this.$set(this.tableConfig, "customRow", this.customRow);
     await this.getNode();
     await this.getRootData();
+    this.onExpandorCollapse() 
   }
 };
 </script>

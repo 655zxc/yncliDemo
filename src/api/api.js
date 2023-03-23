@@ -1,10 +1,10 @@
 import DsUtils from "yn-p1/libs/utils/DsUtils";
 
 
-const baseUrl = ".."
-// const baseUrl = "http://192.168.110.84:8060"
-// const baseUrl = "http://192.168.60.134"    
-// const baseUrl = "http://192.168.60.135"  
+// const baseUrl = ".." 
+// const baseUrl = "http://192.168.110.84:8060"  
+// const baseUrl = "http://192.168.60.134"   
+const baseUrl = "http://192.168.60.135"        
 // const baseUrl = "http://192.168.12.90"
 // const baseUrl = "http://localhost:8060"
 

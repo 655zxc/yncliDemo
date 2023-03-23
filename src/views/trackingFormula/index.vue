@@ -125,7 +125,7 @@
         >
           {{ text }} 
         </span>
-        <!-- <span
+        <span
           slot="multiReference"
           slot-scope="text, record"
           :style="record.traced ? (record.result==record.calcResult?'':'color:red;') : 'color: rgb(188,193,204);'"
@@ -138,7 +138,7 @@
           :style="record.traced ? (record.result==record.calcResult?'':'color:red;') : 'color: rgb(188,193,204);'"
         >
           {{ text }} 
-        </span> -->
+        </span>
         <span
           slot="formula"
           slot-scope="text, record"
@@ -215,26 +215,26 @@ export default {
           scopedSlots: {
             customRender: "reference"
           },
-          width: "24%"
+          width: "14%"
         },
-        // {
-        //   title: "多维引用",
-        //   dataIndex: "multiReference",
-        //   key: "multiReference",
-        //   scopedSlots: {
-        //     customRender: "multiReference"
-        //   },
-        //   width: "10%"
-        // },
-        // {
-        //   title: "所属表单",
-        //   dataIndex: "form",
-        //   key: "form",
-        //   scopedSlots: {
-        //     customRender: "form"
-        //   },
-        //   width: "10%" 
-        // },
+        {
+          title: "多维引用",
+          dataIndex: "multiReference",
+          key: "multiReference",
+          scopedSlots: {
+            customRender: "multiReference"
+          },
+          width: "15%"
+        }, 
+        {
+          title: "所属表单",
+          dataIndex: "form",
+          key: "form",
+          scopedSlots: {
+            customRender: "form"
+          },
+          width: "15%" 
+        },
         {
           title: "公式",
           dataIndex: "formula",
@@ -242,7 +242,7 @@ export default {
           scopedSlots: {
             customRender: "formula"
           },
-          width: "60%"  
+          width: "40%"    
         },
         {
           title: "缓存值",
@@ -409,8 +409,8 @@ export default {
           let treeTableObj = {
             key: p.location,
             reference: p.reference,
-            multiReference: "test", 
-            form:"test",
+            multiReference: p.dimPoint, 
+            form:p.formName,
             formula: p.formula,
             result: p.value,
             parentKey: [p.location],
@@ -454,8 +454,8 @@ export default {
           let treeTableObj = {
             key: p.location + [...treeNode.parentKey],
             reference: p.reference,
-            multiReference: "test",
-            form:"test", 
+            multiReference: p.dimPoint,   
+            form:p.formName,
             formula: p.formula,
             result: p.value,
             traced: p.traced,
@@ -562,7 +562,7 @@ export default {
   width: 133%;
   transform-origin: 0 0;
   position: absolute;
-}
+} 
 
 .tfSpin {
   /* flex: 1; */
