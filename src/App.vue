@@ -5,6 +5,7 @@
       <!-- <preciseRelease /> -->
       <!-- <formGrouping /> -->
       <!-- <trackingFormula /> -->
+      <!-- <journal />  -->
       <router-view></router-view>
     </yn-locale-provider>
     <!-- </yn-spin> -->
@@ -33,6 +34,7 @@
 </template>
 
 <script>
+import journal from "@/views/journal/index";
 import trackingFormula from "@/views/trackingFormula/index";
 import formGrouping from "@/views/formGrouping/index";
 import preciseRelease from "@/views/preciseRelease/index";
@@ -109,15 +111,15 @@ export default {
       server: debugServer,
       ignore: debugIgnore
     } = query || {};
-    console.log("query",query); 
+    console.log("query", query);
     //基础配置
     TOKEN = TOKEN && decodeURI(decodeURI(TOKEN));
-    TOKEN = "11edc91a746964daa996691d61342159"             
+    // TOKEN = "11edd9a7d9555f378f773bd3d0258b29";
     lang = lang && decodeURI(decodeURI(lang));
     appId = appId && decodeURI(decodeURI(appId));
     menuId = (menuId && decodeURI(decodeURI(menuId))) || "metadataMenu";
     inTab = (inTab && decodeURI(decodeURI(inTab))) || menuId;
-    roleId = roleId && decodeURI(decodeURI(roleId)); 
+    roleId = roleId && decodeURI(decodeURI(roleId));
     // serviceName = (serviceName && decodeURI(decodeURI(serviceName))) || "ecs";
     (serviceName = ""),
       (securityFlag = securityFlag && decodeURI(decodeURI(securityFlag)));
@@ -138,9 +140,9 @@ export default {
       config => {
         let { headers, url } = config || {};
         const { ServiceName, appId: selectAppId } = headers || {};
-        headers.LoginToken = TOKEN; 
+        headers.LoginToken = TOKEN;
         // headers.appId = selectAppId || appId;
-        headers.appId = "c76ef194385e11eb9f43c90043244155" 
+        headers.appId = "c76ef194385e11eb9f43c90043244155";
         //写死appid 魔术表单需要的appid
         headers.MenuId = menuId;
 
@@ -223,6 +225,7 @@ export default {
     // preciseRelease,
     // formGrouping,
     // trackingFormula
+    // journal
   },
   created() {
     let language = APPS.LANGUAGE || LOCALE_CODE;

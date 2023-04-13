@@ -20,9 +20,12 @@
         >
       </div>
       <template slot="table.checkbox" slot-scope="text, record">
-        <div style="display:flex;align-items:center;height: 21px;">    
-          <div @click.stop style="height:16px;width:16px;display:flex;align-items:center;justify-content:center;"> 
-            <yn-checkbox 
+        <div style="display:flex;align-items:center;height: 21px;">
+          <div
+            @click.stop
+            style="height:16px;width:16px;display:flex;align-items:center;justify-content:center;"
+          >
+            <yn-checkbox
               @change="onChange($event, record)"
               v-model="isChecked[text][0]"
             ></yn-checkbox>
@@ -87,14 +90,14 @@ export default {
         // 不隐藏的操作需要指定类型
         { slotName: "treeTopOptionsSlot" /*插槽name*/ }
       ],
-      treeConfig: { 
+      treeConfig: {
         noFound: false, //不清楚
         treeData: [],
         defaultSelectedKeys: [],
-        expandedKeys: [],
+        expandedKeys: []
         // defaultExpandAll:true,
         // selectedKeys:[]
-      }, 
+      },
       toolsConfig: {
         title: "",
         options: [
@@ -160,7 +163,7 @@ export default {
     //检测ischecked
     isChecked: {
       handler(newData, oldData) {
-        console.log("改变了");
+        // console.log("改变了");
         let dataNum = 0;
         for (let i in this.isChecked) {
           if (this.isChecked[i][0]) {
@@ -364,7 +367,7 @@ export default {
     this.$set(this.tableConfig, "customRow", this.customRow);
     await this.getNode();
     await this.getRootData();
-    this.onExpandorCollapse() 
+    this.onExpandorCollapse();
   }
 };
 </script>

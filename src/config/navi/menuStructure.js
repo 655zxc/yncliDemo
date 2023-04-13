@@ -93,20 +93,25 @@
 export default [
   {
     path: "/",
-    component: () => import("@/views/preciseRelease/index"),
-    // component: () => import("@/views/Type/index"),
-    // component: () => import("@/views/trackingFormula/index"),
+    // component: () => import("@/views/preciseRelease/index")
+    // component: () => import("@/views/formGrouping/index")
+    // component: () => import("@/views/trackingFormula/index")
+    component: () => import("@/views/journal/index")
   },
   {
     path: "/preciseRelease",
-    component: () => import("@/views/preciseRelease/index"),
+    component: () => import("@/views/preciseRelease/index")
   },
   {
     path: "/formTag",
-    component: () => import("@/views/formGrouping/index"),
+    component: () => import("@/views/formGrouping/index")
   },
-  {  
+  {
     path: "/trackingFormula",
-    component: () => import("@/views/trackingFormula/index"),
+    component: () => import("@/views/trackingFormula/index")
   },
-]
+  {
+    path: "/journal",
+    component: () => import("@/views/journal/index")
+  }
+];

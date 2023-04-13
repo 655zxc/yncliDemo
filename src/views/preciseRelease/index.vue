@@ -2,14 +2,14 @@
   <div class="prBox">
     <yn-spin :spinning="isLoading">
       <div class="container">
-        <headerSearch @subSearch="subSearch"/>
+        <headerSearch @subSearch="subSearch" />
         <div class="search">
           <div>
             <span class="searchLabel">精准:</span>
             <yn-select style="width: 80px" v-model="accurateSelect">
               <yn-select-option value="failure">不参与</yn-select-option>
               <yn-select-option value="noFailure">参与</yn-select-option>
-              <yn-select-option value="all">全部</yn-select-option> 
+              <yn-select-option value="all">全部</yn-select-option>
             </yn-select>
           </div>
           <div>
@@ -49,9 +49,9 @@
             <yn-select style="width: 80px" v-model="lockSelect">
               <yn-select-option value="failure">否</yn-select-option>
               <yn-select-option value="noFailure">是</yn-select-option>
-              <yn-select-option value="all">全部</yn-select-option> 
+              <yn-select-option value="all">全部</yn-select-option>
             </yn-select>
-          </div> 
+          </div>
         </div>
         <div class="operation">
           <span>检测</span>
@@ -85,7 +85,7 @@
           >
           <yn-divider type="vertical" style="height:32px;" />
           <span>发布实例/Sheet</span>
-          <yn-button type="primary" @click="releaseVisible = true" 
+          <yn-button type="primary" @click="releaseVisible = true"
             >发布</yn-button
           >
           <yn-button type="primary" @click="computeVisible = true"
@@ -111,9 +111,7 @@
           <yn-button type="primary" @click="deleteOperationVisible = true"
             >删除</yn-button
           >
-          <yn-button type="primary" @click="lockVisible = true"
-            >锁定</yn-button
-          >
+          <yn-button type="primary" @click="lockVisible = true">锁定</yn-button>
           <yn-button type="primary" @click="unlockVisible = true"
             >解锁</yn-button
           >
@@ -141,20 +139,17 @@
             :autoHeight="true"
             :tableDraggable="true"
           >
-            <!-- <template slot="table.customTitle" slot-scope="text">
-              <div>
-                xxxxxxxxx
-              </div>
-            </template> -->
             <template slot="table.firstCol" slot-scope="text, record">
-              <div style="display:flex;  justify-content: center;align-items: center;">
+              <div
+                style="display:flex;  justify-content: center;align-items: center;"
+              >
                 <div @click.stop style="height:16px;width:16px">
-                  <yn-checkbox 
+                  <yn-checkbox
                     @change="onChangeColumnsCheckbox($event, record)"
                     v-model="isChecked[text]"
                   ></yn-checkbox>
-                </div> 
-              </div> 
+                </div>
+              </div>
             </template>
             <template slot="table.draftSign" slot-scope="text">
               <yn-tag color="white" v-if="text == true">正式版</yn-tag>
@@ -166,7 +161,7 @@
             </template>
             <template slot="table.lock" slot-scope="text">
               <yn-tag color="volcano" v-if="text == true">是</yn-tag>
-              <yn-tag color="white" v-else="">否</yn-tag> 
+              <yn-tag color="white" v-else="">否</yn-tag>
             </template>
             <template slot="table.structureSign" slot-scope="text">
               <yn-tag color="volcano" v-if="text == true">失效</yn-tag>
@@ -437,7 +432,7 @@ import "yn-p1/libs/components/yn-list-item-meta/";
 import DsUtils from "yn-p1/libs/utils/DsUtils";
 import UiUtils from "yn-p1/libs/utils/UiUtils";
 import api from "../../api/api.js";
-import headerSearch from "./Header/search"
+import headerSearch from "./Header/search";
 export default {
   name: "preciseRelease",
   data() {
@@ -495,10 +490,8 @@ export default {
         total: 50,
         pageSize: 5,
         pageSizeOptions: ["5", "10", "20", "30", "50", "100"]
-      }, 
+      },
 
-
-      
       formName: "",
       filterDimension: "",
       isShowTitleCheckbox: false,
@@ -520,8 +513,7 @@ export default {
               customRender: "firstCol" //这一列提供插槽
               // title: 'title'
               // filterIcon: 'filterIcon',
-            },
-            slots: { title: "customTitle" }
+            }
           },
           {
             title: "表单名称",
@@ -532,14 +524,14 @@ export default {
           {
             title: "筛选维",
             dataIndex: "dimension",
-            width: 468 
+            width: 468
             // width: "32%"
           },
           {
             title: "草稿/正式",
-            // title: "版本", 
+            // title: "版本",
             dataIndex: "draftSign",
-            width: 64,  
+            width: 64,
             // width: "10%",
             align: "center",
             fixed: "right",
@@ -562,7 +554,7 @@ export default {
           {
             title: "是否锁定",
             // title: "锁定",
-            dataIndex: "lock", 
+            dataIndex: "lock",
             width: 60,
             // width: "10%",
             align: "center",
@@ -609,15 +601,15 @@ export default {
           },
           {
             title: "删除标识",
-            // title: "删除", 
+            // title: "删除",
             dataIndex: "deleteSign",
-            width: 60,        
+            width: 60,
             // width: "10%",
             align: "center",
             fixed: "right",
             scopedSlots: {
               customRender: "deleteSign"
-            } 
+            }
           }
         ],
         // rowSelection:{
@@ -664,7 +656,7 @@ export default {
       differencesVisible: false,
       isLoading: false,
       accurateSelect: "all",
-      lockSelect:"all", 
+      lockSelect: "all",
       structureSelect: "all",
       formulaSelect: "all",
       computeSelect: "all",
@@ -700,7 +692,7 @@ export default {
       showReleaseDraftVisible: false,
       releaseandComputeVisible: false,
       lockVisible: false,
-      unlockVisible:false,
+      unlockVisible: false,
       detectDifferencesResult: {}, //检测差异后的详细信息
       releaseDraftError: [],
       releaseDraftSuccess: [],
@@ -720,7 +712,7 @@ export default {
           dataIndex: "name",
           key: "name",
           customRender: customRenderName,
-          width: "16%"    
+          width: "16%"
         },
         {
           title: "检测前合计",
@@ -734,7 +726,7 @@ export default {
           dataIndex: "afterDetectAddSheetCount",
           key: "afterDetectAddSheetCount",
           customRender: customRender2,
-          width: "9%" 
+          width: "9%"
         },
         {
           title: "删除",
@@ -755,14 +747,14 @@ export default {
           dataIndex: "afterDetectNoChangeSheetCount",
           key: "afterDetectNoChangeSheetCount",
           customRender: customRender2,
-          width: "7%" 
+          width: "7%"
         },
         {
           title: "影响表单",
           dataIndex: "affectRelyFormCount",
           key: "affectRelyFormCount",
           customRender: customRender2,
-          width: "8%" 
+          width: "8%"
         },
         {
           title: "影响实例",
@@ -776,14 +768,14 @@ export default {
           dataIndex: "costTime",
           key: "costTime",
           customRender: customRender2,
-          width: "9%" 
+          width: "9%"
         },
         {
           title: "完成时间",
           dataIndex: "finishTime",
           key: "finishTime",
           // customRender: customRender2,
-          width: "14%" 
+          width: "14%"
         },
         {
           title: "复制",
@@ -794,7 +786,7 @@ export default {
             customRender: "copyIcon"
           },
           align: "center",
-          width: "5%" 
+          width: "5%"
         }
       ],
       detectDifferencesResultTable: [], //检测差异后的详细信息(table)
@@ -830,11 +822,8 @@ export default {
   },
   methods: {
     lock() {
-      this.lockVisible = false
-      DsUtils.post(
-        `${api.markInvalid}`,
-        this.getParam("lock")
-      ).then(res => {
+      this.lockVisible = false;
+      DsUtils.post(`${api.markInvalid}`, this.getParam("lock")).then(res => {
         if (res.data.success) {
           UiUtils.successMessage(res.data.data);
           this.search(0); //更新数据
@@ -842,23 +831,20 @@ export default {
       });
     },
     unlock() {
-      this.unlockVisible = false
-      DsUtils.post(
-        `${api.markInvalid}`,
-        this.getParam("unlock")
-      ).then(res => {
+      this.unlockVisible = false;
+      DsUtils.post(`${api.markInvalid}`, this.getParam("unlock")).then(res => {
         if (res.data.success) {
           UiUtils.successMessage(res.data.data);
           this.search(0); //更新数据
-        } 
+        }
       });
     },
     subSearch(arr, dim) {
       // console.log("search传递参数");
-      // console.log(arr, dim); 
-      this.selectedForm = arr
-      this.filterDimension = dim
-      this.search(1) 
+      // console.log(arr, dim);
+      this.selectedForm = arr;
+      this.filterDimension = dim;
+      this.search(1);
     },
     //搜索筛选维 (聚焦,输入,跳页时触发)
     async onSearchDimension(flag) {
@@ -870,7 +856,7 @@ export default {
       //   UiUtils.errorMessage("请先选择表单");
       //   return;
       // }
-      let obj = { 
+      let obj = {
         bookIds: [this.selectedForm.bookId],
         pageDimFilter: this.dimensionName,
         pageNum: this.DimensionPage.current,
@@ -907,7 +893,7 @@ export default {
           ? ""
           : this.accurateSelect == "failure"
           ? false
-            : true;
+          : true;
       let lockFlag =
         this.lockSelect == "all"
           ? null
@@ -969,7 +955,7 @@ export default {
           bookIds: arr,
           pageDimFilter: this.filterDimension,
           precisePublish: precisePublish,
-          lockFlag:lockFlag,
+          lockFlag: lockFlag,
           publishFlag: publishFlag,
           formulaFlag: formulaFlag,
           calcFlag: calcFlag,
@@ -1009,7 +995,7 @@ export default {
                 key: p.sheetId,
                 bookId: p.bookId,
                 sheetId: p.sheetId,
-                bookName: p.bookName, 
+                bookName: p.bookName,
                 dimension: p.pageDimName,
 
                 //请区分这里的字段和查询条件中的字段
@@ -1017,7 +1003,7 @@ export default {
                 //查询条件是查询筛选的状态
                 draftSign: p.formulaPublish,
                 accurateDetectionSign: accurateDetectionFlag,
-                lock:p.lockFlag,   
+                lock: p.lockFlag,
                 structureSign: sheetPublishFlag,
                 formulaSign: sheetFormulaFlag,
                 calculationSign: sheetCalculationFlag,
@@ -1123,8 +1109,8 @@ export default {
         bookIds: this.searchInfo.bookIds,
         pageDimFilter: this.searchInfo.pageDimFilter,
         precisePublish: this.searchInfo.precisePublish,
-        lockFlag:this.searchInfo.lockFlag, 
-        toDeleteFlag:this.searchInfo.toDeleteFlag,
+        lockFlag: this.searchInfo.lockFlag,
+        toDeleteFlag: this.searchInfo.toDeleteFlag,
         publishFlag: this.searchInfo.publishFlag,
         formulaFlag: this.searchInfo.formulaFlag,
         calcFlag: this.searchInfo.calcFlag,
@@ -1135,7 +1121,7 @@ export default {
 
         selectAll: this.isAllChecked,
         excludeSheetInfos: [],
-        selectSheetInfos: [] 
+        selectSheetInfos: []
       };
 
       if (value == "structural") {
@@ -1181,30 +1167,29 @@ export default {
           calc: false
         };
       } else if (value == "accurateDetection") {
-      }
-      else if (value == "lock") {
+      } else if (value == "lock") {
         obj = {
           ...obj,
           locked: true
-          //这里是设置标识的条件 
+          //这里是设置标识的条件
         };
-      }
-      else if (value == "unlock") {
+      } else if (value == "unlock") {
         obj = {
           ...obj,
           locked: false
-        }; 
+        };
       }
 
       if (!this.isAllChecked) {
         for (let key in this.data) {
           if (this.isChecked[this.data[key].sheetId]) {
-            let formulaPublish = this.data[key].draftSign == true ? true : false;
+            let formulaPublish =
+              this.data[key].draftSign == true ? true : false;
             let accurateDetectionFlag =
               this.data[key].accurateDetectionSign == true ? true : false;
             let lock = this.data[key].lock == true ? true : false;
             let formulaFlag = this.data[key].formulaSign == true ? false : true;
-            let publishFlag = 
+            let publishFlag =
               this.data[key].structureSign == true ? false : true;
             let calcFlag =
               this.data[key].calculationSign == true ? false : true;
@@ -1215,12 +1200,12 @@ export default {
             // let publishFlag = !this.data[key].structureSign;
             // let calcFlag = !this.data[key].calculationSign;
             // let toDeleteFlag = this.data[key].deleteSign;
-            let o = { 
+            let o = {
               bookId: this.data[key].bookId,
               bookName: this.data[key].bookName,
               precisePublish: accurateDetectionFlag,
               formulaFlag: formulaFlag,
-              lockFlag:lock,
+              lockFlag: lock,
               pageDimName: this.data[key].dimension,
               publishFlag: publishFlag,
               calcFlag: calcFlag,
@@ -1422,7 +1407,7 @@ export default {
       try {
         let res = await api.accuratePublishCalc(this.getParam("compute"));
         if (res.data.success) {
-          // UiUtils.successMessage("计算成功"); 
+          // UiUtils.successMessage("计算成功");
           // this.clearChecked();
           // this.search(2);
           this.getProgress(res.data.data, "compute");
@@ -1873,7 +1858,7 @@ export default {
             arr.map(v2 => {
               return this.getTextWidth(v2);
             })
-          ) + 40; //20模拟padding
+          ) + 40; //模拟padding
         if (v1.dataIndex == "bookName" || v1.dataIndex == "dimension") {
           // if (v1.width < 500) {
           //   //说明被调整缩小过
@@ -1883,7 +1868,7 @@ export default {
         }
       });
     },
-    handleHoverChange(visible) { 
+    handleHoverChange(visible) {
       // this.clicked = false;
       this.hovered = visible;
     },
@@ -1905,22 +1890,17 @@ export default {
     }, 1000);
   },
   components: {
-    headerSearch,
+    headerSearch
   }
 };
 </script>
 <style scoped>
-.showFormResultModal ::v-deep .ant-modal-body{
-  /* padding-top:0px;  */ 
+.detectDifferencesTable ::v-deep thead {
+  position: sticky;
+  top: -24px;
+  z-index: 9999;
 }
-.detectDifferencesTable  ::v-deep thead{
 
-    position: sticky;
-    top: -24px;
-    z-index: 9999;    
-} 
- 
- 
 .menu-search-item:hover,
 .menu-search-filter-item:hover {
   background: #f0f4fe;
@@ -1971,7 +1951,6 @@ export default {
   flex-direction: column;
 }
 
-
 .operation {
   display: flex;
   justify-content: space-between;
@@ -1979,19 +1958,19 @@ export default {
   padding-left: 20px;
   padding-right: 20px;
   margin-top: 20px;
-} 
+}
 
-.search{
-  display: flex; 
+.search {
+  display: flex;
   align-items: center;
   padding-left: 20px;
   padding-right: 20px;
   margin-top: 20px;
-} 
+}
 
 .search > * {
   margin-right: 12px;
-} 
+}
 
 .searchedTags {
   border-left: 20px solid white;

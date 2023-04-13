@@ -42,12 +42,9 @@
           </div>
         </div>
       </div>
-      <yn-button
-        @click="formGroup" 
-        style="margin-right:20px;"
-        type="primary"
+      <yn-button @click="formGroup" style="margin-right:20px;" type="primary"
         >按分组添加表单</yn-button
-      >  
+      >
       <div class="tfFilterDimension">
         <div style="width:80px">搜索筛选维:</div>
         <div class="menu-search-filter" ref="menuSearchFilter">
@@ -87,7 +84,7 @@
         </div>
       </div>
       <yn-button type="primary" @click="search">查询</yn-button>
-      <div class="routerButton" style="margin-left: auto;">
+      <!-- <div class="routerButton" style="margin-left: auto;">
         <yn-button
           @click="$router.push('/preciseRelease', () => {})"
           style="margin-left:8px"
@@ -103,7 +100,12 @@
           style="margin-left:8px"
           >公式追踪</yn-button
         >
-      </div>
+        <yn-button
+          @click="$router.push('/journal', () => {})"
+          style="margin-left:8px"
+          >日志下载</yn-button
+        > 
+      </div> -->
     </div>
 
     <div class="searchedTags">
@@ -179,13 +181,13 @@ export default {
     selectGroup
   },
   methods: {
-    formGroup() { 
+    formGroup() {
       if (this.$refs.selectGroup) {
-        // this.$refs.selectGroup.createIsChecked() 
+        // this.$refs.selectGroup.createIsChecked()
         //没点开selectGroup是没有这个组件的,要点开一次后才有
       }
-      this.formGroupVisible = true    
-    }, 
+      this.formGroupVisible = true;
+    },
     //添加 表单分组 中的表单
     addFormGroup() {
       this.formGroupVisible = false;
@@ -209,20 +211,20 @@ export default {
               bookName: data[i][1]
             });
             //并且设置isFormChecked
-            this.$set(this.isFormChecked,data[i][2],true) 
+            this.$set(this.isFormChecked, data[i][2], true);
           }
         }
       }
 
       // 去重
-      let arr2 = []
-      let obj2 = {}
+      let arr2 = [];
+      let obj2 = {};
       arr.forEach(p => {
         if (!obj2[p.bookId]) {
-          arr2.push(p)
-          obj2[p.bookId] = true
+          arr2.push(p);
+          obj2[p.bookId] = true;
         }
-      }) 
+      });
       this.formChecked.push(...arr2);
     },
     search() {

@@ -75,7 +75,7 @@
       </template>
 
       <template slot="tools.buttonSlot2">
-        <yn-button
+        <!-- <yn-button
           @click="$router.push('/preciseRelease', () => {})"
           style="margin-left:8px"
           >精准发布</yn-button
@@ -83,13 +83,18 @@
         <yn-button
           @click="$router.push('/formTag', () => {})"
           style="margin-left:8px"
-          >表单分组</yn-button 
+          >表单分组</yn-button
         >
         <yn-button
           @click="$router.push('/trackingFormula', () => {})"
           style="margin-left:8px"
           >公式追踪</yn-button
         >
+        <yn-button
+          @click="$router.push('/journal', () => {})"
+          style="margin-left:8px"
+          >日志下载</yn-button
+        > -->
       </template>
 
       <template slot="table.action" slot-scope="text, record">
@@ -99,6 +104,12 @@
           @click="deleteForm(record)"
           >删除</a
         >
+        <!-- <a
+          class="yn-a-link action-margin"
+          href="javascript:;"
+          @click="copyFormId(record)"
+          >复制</a
+        > -->
       </template>
     </yn-page-tree-list>
     <yn-modal v-model="addGroupVisible" title="新建分组" @ok="addGroup">
@@ -203,7 +214,6 @@ import "yn-p1/libs/components/yn-row/";
 import "yn-p1/libs/components/yn-col/";
 import api from "../../api/api.js";
 import UiUtils from "yn-p1/libs/utils/UiUtils";
- 
 
 export default {
   data() {
@@ -326,8 +336,8 @@ export default {
           current: 1,
           pageSize: 20,
           showQuickJumper: true,
-          total: 1, 
-          pageSizeOptions: ["10", "15","20", "50", "100", "200"],
+          total: 1,
+          pageSizeOptions: ["10", "15", "20", "50", "100", "200"],
           showSizeChanger: true,
           showTotal: total => {
             return "总计" + total + "条数据";
@@ -356,7 +366,7 @@ export default {
           },
           {
             title: "操作",
-            width: 60,
+            width: 80,
             dataIndex: "action",
             scopedSlots: {
               customRender: "action"
@@ -374,9 +384,18 @@ export default {
     };
   },
   methods: {
+    copyFormId(record) {
+      const textArea = document.createElement("textArea");
+      textArea.value = record.id;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      UiUtils.successMessage("已复制表单代码");
+    },
     onSelectAddForm(keys, e) {
-      console.log(keys, e);
-      console.log(e.node.dataRef.parentKey);
+      // console.log(keys, e);
+      // console.log(e.node.dataRef.parentKey);
     },
     async onClickAddForm() {
       if (this.selectNodeKey == "") {
@@ -389,7 +408,7 @@ export default {
       this.treeKey = new Date().getTime();
       let res = await api.getSceneForm();
       res = res.data.data;
-      console.log(res);
+      // console.log(res);
       let node = [];
       res.forEach(p => {
         node.push({
@@ -441,7 +460,7 @@ export default {
       e.checkedNodes.forEach(p => {
         this.checkedNodesPath.push(p.data.props.parentKey);
       });
-      console.log("onCheck", checkedKeys, this.checkedNodesPath);
+      // console.log("onCheck", checkedKeys, this.checkedNodesPath);
       this.checkedKeys = checkedKeys;
     },
     //点击node菜单
@@ -476,7 +495,7 @@ export default {
     },
     async renameNode() {
       this.renameVisible = false;
-      console.log(this.clickNode, this.renameValue);
+      // console.log(this.clickNode, this.renameValue);
       let obj = {
         tagName: this.renameValue,
         targetId: this.clickNode.id
@@ -561,7 +580,7 @@ export default {
             "该分组含有子分组,删除会导致所有的子分组也被删除,确定要继续删除吗?",
           content: "",
           async onOk() {
-            console.log(_this.clickNode, "删除");
+            // console.log(_this.clickNode, "删除");
             await api.deleteGroup(_this.clickNode.id);
             _this.tableConfig.dataSource = [];
             _this.getNode();
@@ -570,7 +589,7 @@ export default {
           class: "test"
         });
       } else {
-        console.log(this.clickNode, "删除");
+        // console.log(this.clickNode, "删除");
         await api.deleteGroup(this.clickNode.id);
         this.tableConfig.dataSource = [];
         this.getNode();
@@ -580,7 +599,7 @@ export default {
     addGroup() {
       //新建分组 应该向后端发送请求 并调用getNode更新node
       //可能需要存储已展开节点 在更新node后再调用展开
-      console.log(this.addGroupValue);
+      // console.log(this.addGroupValue);
       this.addGroupVisible = false;
 
       this.treeConfig.treeData.push({
@@ -652,7 +671,7 @@ export default {
     //获取数据 用于修改dataSource 以及 分页器
     //参数应该为 分页器数据 选择的节点 查询表单参数
     async getData() {
-      console.log("发送请求"); 
+      // console.log("发送请求");
       let pageSize = this.tableConfig.pagination.pageSize;
       let pageNum = this.tableConfig.pagination.current;
 
@@ -661,11 +680,11 @@ export default {
         pageNum,
         pageSize,
         searchByFormName: this.inputSearchForm,
-        pageFlag:true
+        pageFlag: true
         //this.inputSearchForm只有在修改input内容 以及切换节点时会更改
       });
       res = res.data.data;
-      console.log(res);
+      // console.log(res);
       let forms = [];
       res.groupForms.forEach(p => {
         forms.push({
@@ -697,7 +716,7 @@ export default {
     },
     //展开节点
     onExpand(expandedKeys, nodeInfo) {
-      console.log(expandedKeys, nodeInfo);
+      // console.log(expandedKeys, nodeInfo);
       this.treeConfig.expandedKeys = expandedKeys;
     },
     //获取节点
@@ -740,12 +759,12 @@ export default {
     },
     //拖拽节点 进入节点时触发
     onDragEnter(info) {
-      console.log("drop进入节点", info);
+      // console.log("drop进入节点", info);
       // this.expandedKeys = info.expandedKeys;
     },
     //拖拽节点 拖拽完成时调用
     async onDrop(info) {
-      console.log("drop完成", info);
+      // console.log("drop完成", info);
       const dropKey = info.node.eventKey; //目标位置的key
       const dragKey = info.dragNode.eventKey; //拖动node的key
       const dropPos = info.node.pos.split("-");
@@ -758,15 +777,15 @@ export default {
 
       dropPosition =
         dropPosition == 0 ? "under" : dropPosition == 1 ? "down" : "up";
-      console.log(dragKey, dropKey, dropPosition);
+      // console.log(dragKey, dropKey, dropPosition);
 
-      console.log(
-        "拖拽点",
-        info.dragNode.dataRef.title,
-        "目标点",
-        info.node.dataRef.title,
-        dropPosition
-      );
+      // console.log(
+      //   "拖拽点",
+      //   info.dragNode.dataRef.title,
+      //   "目标点",
+      //   info.node.dataRef.title,
+      //   dropPosition
+      // );
 
       let isBrather = false;
 
@@ -819,10 +838,10 @@ export default {
             } else {
               await api.moveGroup(dragKey, dropKey, dropPosition);
               await _this.getNode();
-              await _this.getData(); 
+              await _this.getData();
             }
           },
-          onCancel() {}, 
+          onCancel() {},
           class: "test"
         });
       } else {
@@ -832,7 +851,7 @@ export default {
         } else {
           await api.moveGroup(dragKey, dropKey, dropPosition);
           await this.getNode();
-          await this.getData(); 
+          await this.getData();
         }
       }
     },
@@ -875,7 +894,7 @@ export default {
         },
         on: {
           click: event => {
-            console.log("点击了我", record, index, event);
+            // console.log("点击了我", record, index, event);
           },
           // 鼠标移入
           mouseenter: event => {
@@ -888,63 +907,60 @@ export default {
             // 兼容IE
             let ev = event || window.event;
             // 阻止冒泡
-            ev.stopPropagation();  
+            ev.stopPropagation();
             // 得到源目标数据
             this.sourceObj = record;
             // console.log(record);
             // console.log("拖拽数据",this.sourceObj);
           },
-          mouseleave: (event) => {
-            //当鼠标在table外的地方松开时,不会触发drop,导致高亮未消失 
+          mouseleave: event => {
+            //当鼠标在table外的地方松开时,不会触发drop,导致高亮未消失
             //但一定会触发mouseleave,因此在mouseleave中清除所有高亮
-            const node = document.querySelectorAll(".targetTop,.targetBottom")
-            if (node.length) { 
+            const node = document.querySelectorAll(".targetTop,.targetBottom");
+            if (node.length) {
               //如果已经有某行高亮 则去除
-              if (node[0].classList.contains('targetTop')) {
-                node[0].classList.remove("targetTop"); 
+              if (node[0].classList.contains("targetTop")) {
+                node[0].classList.remove("targetTop");
               }
-              if (node[0].classList.contains('targetBottom')) {
-                node[0].classList.remove("targetBottom"); 
-              } 
-            }   
-          },   
+              if (node[0].classList.contains("targetBottom")) {
+                node[0].classList.remove("targetBottom");
+              }
+            }
+          },
           // 拖动元素经过的元素
           dragover: event => {
             // 兼容 IE
             let ev = event || window.event;
             // 阻止默认行为
-            ev.preventDefault(); 
+            ev.preventDefault();
 
-            const list = document.getElementsByClassName("ant-table-row");//获取所有行
-            const node = document.querySelectorAll(".targetTop,.targetBottom")
- 
-            if (node.length) { 
+            const list = document.getElementsByClassName("ant-table-row"); //获取所有行
+            const node = document.querySelectorAll(".targetTop,.targetBottom");
+
+            if (node.length) {
               //如果已经有某行高亮 则去除
-              if (node[0].classList.contains('targetTop')) {
-                node[0].classList.remove("targetTop"); 
+              if (node[0].classList.contains("targetTop")) {
+                node[0].classList.remove("targetTop");
               }
-              if (node[0].classList.contains('targetBottom')) {
-                node[0].classList.remove("targetBottom"); 
-              } 
-            }   
-  
-
-            //计算鼠标在该行的哪一个位置 
-            let top = list[index].getBoundingClientRect().top
-            let bottom = list[index].getBoundingClientRect().bottom
-            if (ev.y >= (top + bottom) / 2) {
-              //下部高亮
-              list[index].classList.add("targetBottom")
-            } 
-            else {
-              //上部高亮
-              list[index].classList.add("targetTop")
+              if (node[0].classList.contains("targetBottom")) {
+                node[0].classList.remove("targetBottom");
+              }
             }
 
+            //计算鼠标在该行的哪一个位置
+            let top = list[index].getBoundingClientRect().top;
+            let bottom = list[index].getBoundingClientRect().bottom;
+            if (ev.y >= (top + bottom) / 2) {
+              //下部高亮
+              list[index].classList.add("targetBottom");
+            } else {
+              //上部高亮
+              list[index].classList.add("targetTop");
+            }
 
-            // console.log(ev); 
+            // console.log(ev);
           },
-          // 鼠标松开 
+          // 鼠标松开
           // 注意,移动到table外不会触发drop,只会触发mouseleave
           drop: async event => {
             // 兼容IE
@@ -953,46 +969,46 @@ export default {
             ev.stopPropagation();
             // 得到目标数据
             this.targetObj = record;
-            console.log(
-              "拖拽数据",
-              this.sourceObj,
-              "目标数据",
-              this.targetObj,
-              "目标事件",
-              ev
-            );
+            // console.log(
+            //   "拖拽数据",
+            //   this.sourceObj,
+            //   "目标数据",
+            //   this.targetObj,
+            //   "目标事件",
+            //   ev
+            // );
 
-            let direction = "down"
-            const node = document.querySelectorAll(".targetTop,.targetBottom")
-            if (node.length) { 
+            let direction = "down";
+            const node = document.querySelectorAll(".targetTop,.targetBottom");
+            if (node.length) {
               //如果已经有某行高亮 则去除
-              if (node[0].classList.contains('targetTop')) {
-                node[0].classList.remove("targetTop"); 
+              if (node[0].classList.contains("targetTop")) {
+                node[0].classList.remove("targetTop");
                 //根据class 决定方向
-                direction = "up"
+                direction = "up";
               }
-              if (node[0].classList.contains('targetBottom')) {
-                node[0].classList.remove("targetBottom"); 
-                direction = "down"
-              } 
-            }    
+              if (node[0].classList.contains("targetBottom")) {
+                node[0].classList.remove("targetBottom");
+                direction = "down";
+              }
+            }
             //去除已有高亮
 
             try {
-              let res = await api.moveForm(this.sourceObj.key, this.targetObj.key, direction);
+              let res = await api.moveForm(
+                this.sourceObj.key,
+                this.targetObj.key,
+                direction
+              );
               if (res.data.success) {
-                UiUtils.successMessage(res.data.data)
-              } 
-              else {
-                UiUtils.errorMessage(res.data.data)
+                UiUtils.successMessage(res.data.data);
+              } else {
+                UiUtils.errorMessage(res.data.data);
               }
-            }
-            catch {
-               
-            }
+            } catch {}
             this.getData();
           }
-        } 
+        }
       };
     },
     setPageSize() {
@@ -1002,29 +1018,29 @@ export default {
         );
       } else {
         localStorage.setItem(
-          "formTagPageSize", 
+          "formTagPageSize",
           this.tableConfig.pagination.pageSize
         );
       }
-    }, 
+    }
   },
   async mounted() {
-    this.setPageSize()
+    this.setPageSize();
     this.$set(this.tableConfig, "customRow", this.customRow);
     await this.getNode();
     await this.getRootData();
-    this.onExpandorCollapse() 
+    this.onExpandorCollapse();
   }
 };
 </script>
 <style scoped>
-/* 设置边框样式实现高亮,而不是添加dom */  
+/* 设置边框样式实现高亮,而不是添加dom */
 :deep(.ant-table-tbody > tr.targetTop > td) {
-  border-top: 2px rgb(19,119,235) solid;
+  border-top: 2px rgb(19, 119, 235) solid;
 }
- 
+
 :deep(.ant-table-tbody > tr.targetBottom > td) {
-  border-bottom: 2px rgb(19,119,235) solid;
+  border-bottom: 2px rgb(19, 119, 235) solid;
 }
 
 .tree-list-demo {

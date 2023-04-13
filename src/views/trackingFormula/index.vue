@@ -10,8 +10,8 @@
           @change="onSearchForm('inputSearch')"
           @focus="onSearchForm"
           style="width:700px;margin-left:0px;margin-right:20px;"
-        /> 
-        <span>已选择表单:{{ selectedForm.bookName }}</span> 
+        />
+        <span>已选择表单:{{ selectedForm.bookName }}</span>
         <div v-show="showDropdown" class="menu-search-dropdown">
           <div>
             <div
@@ -23,7 +23,7 @@
               {{ p.bookName }}
             </div>
           </div>
-          <yn-divider /> 
+          <yn-divider />
           <yn-pagination
             v-model="searchPage.current"
             showQuickJumper
@@ -36,7 +36,7 @@
         </div>
       </div>
 
-      <div style="margin-left: auto;">
+      <!-- <div style="margin-left: auto;">
         <yn-button
           @click="$router.push('/preciseRelease', () => {})"
           style="margin-left:8px"
@@ -52,7 +52,12 @@
           style="margin-left:8px"
           >公式追踪</yn-button
         >
-      </div>
+        <yn-button
+          @click="$router.push('/journal', () => {})"
+          style="margin-left:8px"
+          >日志下载</yn-button
+        >
+      </div> -->
     </div>
     <div class="tfFilterDimension">
       <div style="width:100px">搜索筛选维:</div>
@@ -64,8 +69,8 @@
           @change="onSearchDimension('inputSearch')"
           @focus="onSearchDimension"
           style="width:700px;margin-left:0px;margin-right:20px;"
-        />  
-        <span>已选择筛选维:{{ selectedDim }}</span> 
+        />
+        <span>已选择筛选维:{{ selectedDim }}</span>
         <div v-show="showDimensionDropdown" class="menu-search-filter-dropdown">
           <div>
             <div
@@ -77,7 +82,7 @@
               {{ p }}
             </div>
           </div>
-          <yn-divider />  
+          <yn-divider />
           <yn-pagination
             v-model="DimensionPage.current"
             showQuickJumper
@@ -95,7 +100,7 @@
       <yn-input
         v-model="formula"
         @pressEnter="search"
-        placeholder="请输入公式,回车查询" 
+        placeholder="请输入公式,回车查询"
         style="width:700px;margin-left:0px;margin-right:20px;"
       >
         <yn-icon-svg
@@ -121,42 +126,78 @@
         <span
           slot="reference"
           slot-scope="text, record"
-          :style="record.traced ? (record.result==record.calcResult?'':'color:red;') : 'color: rgb(188,193,204);'"
+          :style="
+            record.traced
+              ? record.result == record.calcResult
+                ? ''
+                : 'color:red;'
+              : 'color: rgb(188,193,204);'
+          "
         >
-          {{ text }} 
+          {{ text }}
         </span>
         <span
           slot="multiReference"
           slot-scope="text, record"
-          :style="record.traced ? (record.result==record.calcResult?'':'color:red;') : 'color: rgb(188,193,204);'"
+          :style="
+            record.traced
+              ? record.result == record.calcResult
+                ? ''
+                : 'color:red;'
+              : 'color: rgb(188,193,204);'
+          "
         >
-          {{ text }} 
+          {{ text }}
         </span>
-        <span 
+        <span
           slot="form"
           slot-scope="text, record"
-          :style="record.traced ? (record.result==record.calcResult?'':'color:red;') : 'color: rgb(188,193,204);'"
+          :style="
+            record.traced
+              ? record.result == record.calcResult
+                ? ''
+                : 'color:red;'
+              : 'color: rgb(188,193,204);'
+          "
         >
-          {{ text }} 
+          {{ text }}
         </span>
         <span
           slot="formula"
           slot-scope="text, record"
-          :style="record.traced ? (record.result==record.calcResult?'':'color:red;') : 'color: rgb(188,193,204);'"
+          :style="
+            record.traced
+              ? record.result == record.calcResult
+                ? ''
+                : 'color:red;'
+              : 'color: rgb(188,193,204);'
+          "
         >
           {{ text }}
         </span>
         <span
           slot="result"
           slot-scope="text, record"
-          :style="record.traced ? (record.result==record.calcResult?'':'color:red;') : 'color: rgb(188,193,204);'"
+          :style="
+            record.traced
+              ? record.result == record.calcResult
+                ? ''
+                : 'color:red;'
+              : 'color: rgb(188,193,204);'
+          "
         >
           {{ text }}
         </span>
         <span
-          slot="calcResult" 
+          slot="calcResult"
           slot-scope="text, record"
-          :style="record.traced ? (record.result==record.calcResult?'':'color:red;') : 'color: rgb(188,193,204);'"
+          :style="
+            record.traced
+              ? record.result == record.calcResult
+                ? ''
+                : 'color:red;'
+              : 'color: rgb(188,193,204);'
+          "
         >
           {{ text }}
         </span>
@@ -170,7 +211,7 @@ import "yn-p1/libs/components/yn-tree-node/";
 import "yn-p1/libs/components/yn-directory-tree/";
 import DsUtils from "yn-p1/libs/utils/DsUtils";
 import UiUtils from "yn-p1/libs/utils/UiUtils";
-import api from "../../api/api.js"; 
+import api from "../../api/api.js";
 export default {
   name: "trackingFormula",
   data() {
@@ -202,7 +243,7 @@ export default {
         bookId: "",
         bookName: ""
       },
-      selectedDim:"",
+      selectedDim: "",
       //根据表单,筛选维查到的sheet
       selectedSheet: {},
 
@@ -225,7 +266,7 @@ export default {
             customRender: "multiReference"
           },
           width: "15%"
-        }, 
+        },
         {
           title: "所属表单",
           dataIndex: "form",
@@ -233,7 +274,7 @@ export default {
           scopedSlots: {
             customRender: "form"
           },
-          width: "15%" 
+          width: "15%"
         },
         {
           title: "公式",
@@ -242,7 +283,7 @@ export default {
           scopedSlots: {
             customRender: "formula"
           },
-          width: "40%"    
+          width: "40%"
         },
         {
           title: "缓存值",
@@ -307,11 +348,11 @@ export default {
     //选择表单
     onSelectForm(p) {
       //清空筛选维
-      // this.dimensionName = ""; 
+      // this.dimensionName = "";
       // console.log(p);
       this.selectedForm = p;
       this.formName = p.bookName;
-      this.showDropdown = false;  
+      this.showDropdown = false;
     },
     //搜索筛选维 (聚焦,输入,跳页时触发)
     async onSearchDimension(flag) {
@@ -339,8 +380,8 @@ export default {
     },
     //选择筛选维
     onSelectDimension(p) {
-      this.selectedDim = p; 
-      this.dimensionName = p
+      this.selectedDim = p;
+      this.dimensionName = p;
       this.showDimensionDropdown = false;
       //得到表单和筛选维，接下来进行查询
       //点击时才执行
@@ -362,11 +403,9 @@ export default {
           // this.selectedSheet = res.data.data.sheetInfos[0];
           res.data.data.sheetInfos.forEach(p => {
             if (p.pageDimName == this.dimensionName) {
-              this.selectedSheet = p
+              this.selectedSheet = p;
             }
-          })
-
-
+          });
         } else {
           UiUtils.errorMessage(res.data.message);
         }
@@ -409,13 +448,13 @@ export default {
           let treeTableObj = {
             key: p.location,
             reference: p.reference,
-            multiReference: p.dimPoint, 
-            form:p.formName,
+            multiReference: p.dimPoint,
+            form: p.formName,
             formula: p.formula,
             result: p.value,
             parentKey: [p.location],
-            traced: p.traced, 
-            calcResult: p.calcValue  
+            traced: p.traced,
+            calcResult: p.calcValue
           };
           if (p.hasChild) {
             treeTableObj.children = [];
@@ -423,7 +462,7 @@ export default {
           treeTableArr.push(treeTableObj);
         });
         this.treeTableData = treeTableArr;
- 
+
         UiUtils.successMessage("查询完成");
         this.spinning = false;
       } catch (err) {
@@ -452,15 +491,15 @@ export default {
         let treeTableArr = [];
         res.itemList.forEach(p => {
           let treeTableObj = {
-            key: p.location + [...treeNode.parentKey],
+            key: p.location,
             reference: p.reference,
-            multiReference: p.dimPoint,   
-            form:p.formName,
+            multiReference: p.dimPoint,
+            form: p.formName,
             formula: p.formula,
             result: p.value,
+            parentKey: [p.location],
             traced: p.traced,
-            parentKey: [...treeNode.parentKey, p.location],
-            calcResult: p.calcValue 
+            calcResult: p.calcValue
           };
           // console.log(treeTableObj);
           if (p.hasChild) {
@@ -479,7 +518,7 @@ export default {
     //挂载点击事件,关闭下拉框
     window.onclick = e => {
       if (this.$refs.menuSearch && !this.$refs.menuSearch.contains(e.target)) {
-        this.showDropdown = false; 
+        this.showDropdown = false;
       }
       if (
         this.$refs.menuSearchFilter &&
@@ -493,10 +532,10 @@ export default {
 </script>
 
 <style scoped>
-.ant-divider-horizontal{
-    margin: 0.25rem 0;
-}  
-.ant-pagination{
+.ant-divider-horizontal {
+  margin: 0.25rem 0;
+}
+.ant-pagination {
   float: right;
 }
 .menu-search-item:hover,
@@ -562,7 +601,7 @@ export default {
   width: 133%;
   transform-origin: 0 0;
   position: absolute;
-} 
+}
 
 .tfSpin {
   /* flex: 1; */
@@ -591,5 +630,10 @@ export default {
 
 .selectFormDataModal ::v-deep .ant-modal-body {
   height: 550px;
+}
+
+::v-deep .ant-table-tbody > tr > td:nth-child(5),
+::v-deep .ant-table-tbody > tr > td:nth-child(6) {
+  white-space: nowrap;
 }
 </style>
